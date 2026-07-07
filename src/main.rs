@@ -1,3 +1,5 @@
+pub mod vector3;
+
 fn main() {
     let height = 256;
     let width = 256;
