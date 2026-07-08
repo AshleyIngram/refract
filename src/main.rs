@@ -2,16 +2,22 @@ use std::io::stdout;
 
 use crate::color::Color;
 use crate::ray::Ray;
+use crate::sphere::Sphere;
 use crate::vector3::{Direction, Point};
 
 pub mod color;
 pub mod ray;
+pub mod sphere;
 pub mod vector3;
 
-fn ray_color(ray: &Ray) -> Color {
-    let unit_direction = ray.direction.normalize();
-    let a = 0.5 * (unit_direction.y + 1.0);
-    (1.0 - a) * Color::new(1.0, 1.0, 1.0) + (a * Color::new(0.5, 0.7, 1.0))
+fn ray_color(ray: &Ray, sphere: &Sphere) -> Color {
+    if sphere.hit(ray) {
+        Color::new(1.0, 0.0, 0.0)
+    } else {
+        let unit_direction = ray.direction.normalize();
+        let a = 0.5 * (unit_direction.y + 1.0);
+        (1.0 - a) * Color::new(1.0, 1.0, 1.0) + (a * Color::new(0.5, 0.7, 1.0))
+    }
 }
 
 fn main() {
@@ -36,6 +42,8 @@ fn main() {
         - viewport_v / 2.0;
     let pixel00_location = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
+    let sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
+
     println!("P3\n{} {}\n255", width, height);
 
     for i in 0..height {
@@ -45,7 +53,7 @@ fn main() {
             let ray_direction = pixel_center - camera_center;
             let ray = Ray::new(camera_center, ray_direction);
 
-            let color = ray_color(&ray);
+            let color = ray_color(&ray, &sphere);
             color.write_ppm(&mut stdout()).unwrap();
         }
     }
