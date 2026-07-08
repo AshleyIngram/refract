@@ -21,7 +21,6 @@ pub struct Vector3<T> {
 pub type Point = Vector3<PointMarker>;
 pub type Direction = Vector3<DirectionMarker>;
 
-
 #[allow(dead_code)] // Used in tests
 type Vec3 = Vector3<Vector3InternalMarker>;
 
@@ -68,7 +67,23 @@ impl Add<Direction> for Point {
     }
 }
 
+impl Add<Direction> for Direction {
+    type Output = Direction;
+
+    fn add(self, other: Direction) -> Direction {
+        Direction::new(self.x + other.x, self.y + other.y, self.z + other.z)
+    }
+}
+
 impl AddAssign<Direction> for Point {
+    fn add_assign(&mut self, other: Direction) {
+        self.x += other.x;
+        self.y += other.y;
+        self.z += other.z;
+    }
+}
+
+impl AddAssign<Direction> for Direction {
     fn add_assign(&mut self, other: Direction) {
         self.x += other.x;
         self.y += other.y;
@@ -146,16 +161,24 @@ impl<T> Neg for Vector3<T> {
     }
 }
 
-impl<T> Sub for Vector3<T> {
-    type Output = Self;
+impl Sub<Direction> for Point {
+    type Output = Point;
 
-    fn sub(self, other: Self) -> Self {
-        Self::new(self.x - other.x, self.y - other.y, self.z - other.z)
+    fn sub(self, other: Direction) -> Point {
+        Point::new(self.x - other.x, self.y - other.y, self.z - other.z)
     }
 }
 
-impl<T> SubAssign for Vector3<T> {
-    fn sub_assign(&mut self, other: Self) {
+impl Sub<Point> for Point {
+    type Output = Direction;
+
+    fn sub(self, other: Point) -> Direction {
+        Direction::new(self.x - other.x, self.y - other.y, self.z - other.z)
+    }
+}
+
+impl SubAssign<Direction> for Point {
+    fn sub_assign(&mut self, other: Direction) {
         self.x -= other.x;
         self.y -= other.y;
         self.z -= other.z;
@@ -186,6 +209,30 @@ impl<'a> Add<&'a Direction> for Point {
     }
 }
 
+impl<'a, 'b> Add<&'b Direction> for &'a Direction {
+    type Output = Direction;
+
+    fn add(self, other: &'b Direction) -> Direction {
+        *self + *other
+    }
+}
+
+impl<'a> Add<Direction> for &'a Direction {
+    type Output = Direction;
+
+    fn add(self, other: Direction) -> Direction {
+        *self + other
+    }
+}
+
+impl<'a> Add<&'a Direction> for Direction {
+    type Output = Direction;
+
+    fn add(self, other: &'a Direction) -> Direction {
+        self + *other
+    }
+}
+
 impl AddAssign<&Direction> for Point {
     fn add_assign(&mut self, other: &Direction) {
         self.x += other.x;
@@ -194,32 +241,64 @@ impl AddAssign<&Direction> for Point {
     }
 }
 
-impl<'a, 'b, T> Sub<&'b Vector3<T>> for &'a Vector3<T> {
-    type Output = Vector3<T>;
+impl AddAssign<&Direction> for Direction {
+    fn add_assign(&mut self, other: &Direction) {
+        self.x += other.x;
+        self.y += other.y;
+        self.z += other.z;
+    }
+}
 
-    fn sub(self, other: &'b Vector3<T>) -> Vector3<T> {
+impl<'a, 'b> Sub<&'b Direction> for &'a Point {
+    type Output = Point;
+
+    fn sub(self, other: &'b Direction) -> Point {
         *self - *other
     }
 }
 
-impl<'a, T> Sub<Vector3<T>> for &'a Vector3<T> {
-    type Output = Vector3<T>;
+impl<'a> Sub<Direction> for &'a Point {
+    type Output = Point;
 
-    fn sub(self, other: Vector3<T>) -> Vector3<T> {
+    fn sub(self, other: Direction) -> Point {
         *self - other
     }
 }
 
-impl<'a, T> Sub<&'a Vector3<T>> for Vector3<T> {
-    type Output = Vector3<T>;
+impl<'a> Sub<&'a Direction> for Point {
+    type Output = Point;
 
-    fn sub(self, other: &'a Vector3<T>) -> Vector3<T> {
+    fn sub(self, other: &'a Direction) -> Point {
         self - *other
     }
 }
 
-impl<T> SubAssign<&Vector3<T>> for Vector3<T> {
-    fn sub_assign(&mut self, other: &Vector3<T>) {
+impl<'a, 'b> Sub<&'b Point> for &'a Point {
+    type Output = Direction;
+
+    fn sub(self, other: &'b Point) -> Direction {
+        *self - *other
+    }
+}
+
+impl<'a> Sub<Point> for &'a Point {
+    type Output = Direction;
+
+    fn sub(self, other: Point) -> Direction {
+        *self - other
+    }
+}
+
+impl<'a> Sub<&'a Point> for Point {
+    type Output = Direction;
+
+    fn sub(self, other: &'a Point) -> Direction {
+        self - *other
+    }
+}
+
+impl SubAssign<&Direction> for Point {
+    fn sub_assign(&mut self, other: &Direction) {
         self.x -= other.x;
         self.y -= other.y;
         self.z -= other.z;
@@ -444,9 +523,9 @@ mod tests {
 
     #[test]
     fn vector3_sub_correct() {
-        let vec1 = Vec3::new(1.0, 1.0, 1.0);
-        let vec2 = Vec3::new(1.0, 2.0, 3.0);
-        let expected_result = Vec3::new(0.0, -1.0, -2.0);
+        let vec1 = Point::new(1.0, 1.0, 1.0);
+        let vec2 = Direction::new(1.0, 2.0, 3.0);
+        let expected_result = Point::new(0.0, -1.0, -2.0);
 
         assert_eq!(vec1 - vec2, expected_result);
         assert_eq!(vec1 - &vec2, expected_result);
@@ -456,14 +535,14 @@ mod tests {
 
     #[test]
     fn vector3_sub_assign_correct() {
-        let mut vec1 = Vec3::new(1.0, 1.0, 1.0);
-        let vec2 = Vec3::new(1.0, 2.0, 3.0);
-        let expected_result = Vec3::new(0.0, -1.0, -2.0);
+        let mut vec1 = Point::new(1.0, 1.0, 1.0);
+        let vec2 = Direction::new(1.0, 2.0, 3.0);
+        let expected_result = Point::new(0.0, -1.0, -2.0);
 
         vec1 -= vec2;
         assert_eq!(vec1, expected_result);
 
-        vec1 = Vec3::new(1.0, 1.0, 1.0);
+        vec1 = Point::new(1.0, 1.0, 1.0);
         vec1 -= &vec2;
         assert_eq!(vec1, expected_result);
     }
