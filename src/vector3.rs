@@ -75,12 +75,18 @@ impl<T> Div<f32> for Vector3<T> {
     type Output = Self;
 
     fn div(self, other: f32) -> Self {
+        assert!(other != 0.0, "Division by zero");
+        assert!(!f32::is_nan(other), "Division by NaN");
+
         Self::new(self.x / other, self.y / other, self.z / other)
     }
 }
 
 impl<T> DivAssign<f32> for Vector3<T> {
     fn div_assign(&mut self, other: f32) {
+        assert!(other != 0.0, "Division by zero");
+        assert!(!f32::is_nan(other), "Division by NaN");
+
         self.x /= other;
         self.y /= other;
         self.z /= other;
@@ -196,6 +202,22 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "Division by zero")]
+    fn vector3_div_by_zero_panics() {
+        let vec = Vec3::new(1.0, 2.0, 4.0);
+
+        let _result = vec / 0.0;
+    }
+
+    #[test]
+    #[should_panic(expected = "Division by NaN")]
+    fn vector3_div_by_nan_panics() {
+        let vec = Vec3::new(1.0, 2.0, 4.0);
+
+        let _result = vec / f32::NAN;
+    }
+
+    #[test]
     fn vector3_div_assign_correct() {
         let mut vec = Vec3::new(1.0, 2.0, 4.0);
         let expected_result = Vec3::new(0.5, 1.0, 2.0);
@@ -203,6 +225,22 @@ mod tests {
         vec /= 2.0;
 
         assert_eq!(vec, expected_result);
+    }
+
+    #[test]
+    #[should_panic(expected = "Division by zero")]
+    fn vector3_div_assign_by_zero_panics() {
+        let mut vec = Vec3::new(1.0, 2.0, 4.0);
+
+        vec /= 0.0;
+    }
+
+    #[test]
+    #[should_panic(expected = "Division by NaN")]
+    fn vector3_div_assign_by_nan_panics() {
+        let mut vec = Vec3::new(1.0, 2.0, 4.0);
+
+        vec /= f32::NAN;
     }
 
     #[test]
@@ -416,5 +454,13 @@ mod tests {
 
         assert_eq!(result, expected_result);
         assert_eq!(result.len(), expected_length);
+    }
+
+    #[test]
+    #[should_panic(expected = "Division by zero")]
+    fn vector3_normalize_zero_correct() {
+        let vec = Vec3::new(0.0, 0.0, 0.0);
+
+        vec.normalize();
     }
 }
