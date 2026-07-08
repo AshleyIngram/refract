@@ -157,6 +157,134 @@ impl<T> SubAssign for Vector3<T> {
     }
 }
 
+impl<'a, 'b, T> Add<&'b Vector3<T>> for &'a Vector3<T> {
+    type Output = Vector3<T>;
+
+    fn add(self, other: &'b Vector3<T>) -> Vector3<T> {
+        *self + *other
+    }
+}
+
+impl<'a, T> Add<Vector3<T>> for &'a Vector3<T> {
+    type Output = Vector3<T>;
+
+    fn add(self, other: Vector3<T>) -> Vector3<T> {
+        *self + other
+    }
+}
+
+impl<'a, T> Add<&'a Vector3<T>> for Vector3<T> {
+    type Output = Vector3<T>;
+
+    fn add(self, other: &'a Vector3<T>) -> Vector3<T> {
+        self + *other
+    }
+}
+
+impl<T> AddAssign<&Vector3<T>> for Vector3<T> {
+    fn add_assign(&mut self, other: &Vector3<T>) {
+        self.x += other.x;
+        self.y += other.y;
+        self.z += other.z;
+    }
+}
+
+impl<'a, 'b, T> Sub<&'b Vector3<T>> for &'a Vector3<T> {
+    type Output = Vector3<T>;
+
+    fn sub(self, other: &'b Vector3<T>) -> Vector3<T> {
+        *self - *other
+    }
+}
+
+impl<'a, T> Sub<Vector3<T>> for &'a Vector3<T> {
+    type Output = Vector3<T>;
+
+    fn sub(self, other: Vector3<T>) -> Vector3<T> {
+        *self - other
+    }
+}
+
+impl<'a, T> Sub<&'a Vector3<T>> for Vector3<T> {
+    type Output = Vector3<T>;
+
+    fn sub(self, other: &'a Vector3<T>) -> Vector3<T> {
+        self - *other
+    }
+}
+
+impl<T> SubAssign<&Vector3<T>> for Vector3<T> {
+    fn sub_assign(&mut self, other: &Vector3<T>) {
+        self.x -= other.x;
+        self.y -= other.y;
+        self.z -= other.z;
+    }
+}
+
+impl<'a, 'b, T> Mul<&'b Vector3<T>> for &'a Vector3<T> {
+    type Output = Vector3<T>;
+
+    fn mul(self, other: &'b Vector3<T>) -> Vector3<T> {
+        *self * *other
+    }
+}
+
+impl<'a, T> Mul<Vector3<T>> for &'a Vector3<T> {
+    type Output = Vector3<T>;
+
+    fn mul(self, other: Vector3<T>) -> Vector3<T> {
+        *self * other
+    }
+}
+
+impl<'a, T> Mul<&'a Vector3<T>> for Vector3<T> {
+    type Output = Vector3<T>;
+
+    fn mul(self, other: &'a Vector3<T>) -> Vector3<T> {
+        self * *other
+    }
+}
+
+impl<T> MulAssign<&Vector3<T>> for Vector3<T> {
+    fn mul_assign(&mut self, other: &Vector3<T>) {
+        self.x *= other.x;
+        self.y *= other.y;
+        self.z *= other.z;
+    }
+}
+
+impl<'a, T> Div<f32> for &'a Vector3<T> {
+    type Output = Vector3<T>;
+
+    fn div(self, other: f32) -> Vector3<T> {
+        *self / other
+    }
+}
+
+impl<'a, T> Mul<f32> for &'a Vector3<T> {
+    type Output = Vector3<T>;
+
+    fn mul(self, other: f32) -> Vector3<T> {
+        *self * other
+    }
+}
+
+impl<T> Mul<&Vector3<T>> for f32 {
+    type Output = Vector3<T>;
+
+    fn mul(self, other: &Vector3<T>) -> Vector3<T> {
+        self * *other
+    }
+}
+
+impl<'a, T> Neg for &'a Vector3<T> {
+    type Output = Vector3<T>;
+
+    fn neg(self) -> Vector3<T> {
+        -*self
+    }
+}
+
 impl<T> Clone for Vector3<T> {
     fn clone(&self) -> Self {
         *self
@@ -175,9 +303,10 @@ mod tests {
         let vec2 = Vec3::new(1.0, 2.0, 3.0);
         let expected_result = Vec3::new(2.0, 3.0, 4.0);
 
-        let result = vec1 + vec2;
-
-        assert_eq!(result, expected_result);
+        assert_eq!(vec1 + vec2, expected_result);
+        assert_eq!(vec1 + &vec2, expected_result);
+        assert_eq!(&vec1 + vec2, expected_result);
+        assert_eq!(&vec1 + &vec2, expected_result);
     }
 
     #[test]
@@ -187,7 +316,10 @@ mod tests {
         let expected_result = Vec3::new(2.0, 3.0, 4.0);
 
         vec1 += vec2;
+        assert_eq!(vec1, expected_result);
 
+        vec1 = Vec3::new(1.0, 1.0, 1.0);
+        vec1 += &vec2;
         assert_eq!(vec1, expected_result);
     }
 
@@ -196,9 +328,8 @@ mod tests {
         let vec = Vec3::new(1.0, 2.0, 4.0);
         let expected_result = Vec3::new(0.5, 1.0, 2.0);
 
-        let result = vec / 2.0;
-
-        assert_eq!(result, expected_result);
+        assert_eq!(vec / 2.0, expected_result);
+        assert_eq!(&vec / 2.0, expected_result);
     }
 
     #[test]
@@ -249,9 +380,10 @@ mod tests {
         let vec2 = Vec3::new(7.0, 5.0, 3.0);
         let expected_result = Vec3::new(14.0, 10.0, 6.0);
 
-        let result = vec1 * vec2;
-
-        assert_eq!(result, expected_result);
+        assert_eq!(vec1 * vec2, expected_result);
+        assert_eq!(vec1 * &vec2, expected_result);
+        assert_eq!(&vec1 * vec2, expected_result);
+        assert_eq!(&vec1 * &vec2, expected_result);
     }
 
     #[test]
@@ -261,7 +393,10 @@ mod tests {
         let expected_result = Vec3::new(14.0, 10.0, 6.0);
 
         vec1 *= vec2;
+        assert_eq!(vec1, expected_result);
 
+        vec1 = Vec3::new(2.0, 2.0, 2.0);
+        vec1 *= &vec2;
         assert_eq!(vec1, expected_result);
     }
 
@@ -270,9 +405,8 @@ mod tests {
         let vec = Vec3::new(7.0, 5.0, 3.0);
         let expected_result = Vec3::new(14.0, 10.0, 6.0);
 
-        let result = vec * 2.0;
-
-        assert_eq!(result, expected_result);
+        assert_eq!(vec * 2.0, expected_result);
+        assert_eq!(&vec * 2.0, expected_result);
     }
 
     #[test]
@@ -290,9 +424,8 @@ mod tests {
         let vec = Vec3::new(7.0, 5.0, 3.0);
         let expected_result = Vec3::new(14.0, 10.0, 6.0);
 
-        let result = 2.0 * vec;
-
-        assert_eq!(result, expected_result);
+        assert_eq!(2.0 * vec, expected_result);
+        assert_eq!(2.0 * &vec, expected_result);
     }
 
     #[test]
@@ -300,9 +433,8 @@ mod tests {
         let vec = Vec3::new(-1.0, 0.0, 1.0);
         let expected_result = Vec3::new(1.0, 0.0, -1.0);
 
-        let result = -vec;
-
-        assert_eq!(result, expected_result);
+        assert_eq!(-vec, expected_result);
+        assert_eq!(-&vec, expected_result);
     }
 
     #[test]
@@ -311,9 +443,10 @@ mod tests {
         let vec2 = Vec3::new(1.0, 2.0, 3.0);
         let expected_result = Vec3::new(0.0, -1.0, -2.0);
 
-        let result = vec1 - vec2;
-
-        assert_eq!(result, expected_result);
+        assert_eq!(vec1 - vec2, expected_result);
+        assert_eq!(vec1 - &vec2, expected_result);
+        assert_eq!(&vec1 - vec2, expected_result);
+        assert_eq!(&vec1 - &vec2, expected_result);
     }
 
     #[test]
@@ -323,7 +456,10 @@ mod tests {
         let expected_result = Vec3::new(0.0, -1.0, -2.0);
 
         vec1 -= vec2;
+        assert_eq!(vec1, expected_result);
 
+        vec1 = Vec3::new(1.0, 1.0, 1.0);
+        vec1 -= &vec2;
         assert_eq!(vec1, expected_result);
     }
 
