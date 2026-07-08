@@ -14,17 +14,16 @@ impl Sphere {
     pub fn hit(&self, ray: &Ray) -> Option<f32> {
         let direction_to_sphere = self.center - ray.origin;
 
-        // Determine whether there's an intersection using the quadratic formula - (A * t^2 + B * t + C = 0)
-        let a = ray.direction.dot(&ray.direction);
-        let b = -2.0 * ray.direction.dot(&direction_to_sphere);
-        let c = direction_to_sphere.dot(&direction_to_sphere) - (self.radius * self.radius);
+        let a = ray.direction.len_squared();
+        let h = ray.direction.dot(&direction_to_sphere);
+        let c = direction_to_sphere.len_squared() - (self.radius * self.radius);
 
-        let discriminant = (b * b) - (4.0 * a * c);
+        let discriminant = h * h - a * c;
 
         if discriminant < 0.0 {
             Option::None
         } else {
-            Option::Some((-b - discriminant.sqrt()) / (2.0 * a))
+            Option::Some((h - discriminant.sqrt()) / a)
         }
     }
 }
