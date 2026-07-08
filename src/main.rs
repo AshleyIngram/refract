@@ -1,3 +1,6 @@
+use std::io::stdout;
+
+pub mod color;
 pub mod vector3;
 
 fn main() {
@@ -12,11 +15,9 @@ fn main() {
             let g = j as f32 / (height - 1) as f32;
             let b = 0.0;
 
-            let ir = (255.9 * r) as i32;
-            let ig = (255.9 * g) as i32;
-            let ib = (255.9 * b) as i32;
 
-            println!("{} {} {}", ir, ig, ib);
+            let color = color::Color::new(r, g, b);
+            color.write_ppm(&mut stdout()).unwrap();
         }
     }
 }
