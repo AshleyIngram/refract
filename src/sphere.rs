@@ -11,7 +11,7 @@ impl Sphere {
         Self { center, radius }
     }
 
-    pub fn hit(&self, ray: &Ray) -> bool {
+    pub fn hit(&self, ray: &Ray) -> Option<f32> {
         let direction_to_sphere = self.center - ray.origin;
 
         // Determine whether there's an intersection using the quadratic formula - (A * t^2 + B * t + C = 0)
@@ -21,6 +21,10 @@ impl Sphere {
 
         let discriminant = (b * b) - (4.0 * a * c);
 
-        return discriminant > 0.0;
+        if discriminant < 0.0 {
+            Option::None
+        } else {
+            Option::Some((-b - discriminant.sqrt()) / (2.0 * a))
+        }
     }
 }

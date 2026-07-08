@@ -11,12 +11,18 @@ pub mod sphere;
 pub mod vector3;
 
 fn ray_color(ray: &Ray, sphere: &Sphere) -> Color {
-    if sphere.hit(ray) {
-        Color::new(1.0, 0.0, 0.0)
-    } else {
-        let unit_direction = ray.direction.normalize();
-        let a = 0.5 * (unit_direction.y + 1.0);
-        (1.0 - a) * Color::new(1.0, 1.0, 1.0) + (a * Color::new(0.5, 0.7, 1.0))
+    let intersection_t = sphere.hit(ray);
+
+    match intersection_t {
+        None => {
+            let unit_direction = ray.direction.normalize();
+            let a = 0.5 * (unit_direction.y + 1.0);
+            (1.0 - a) * Color::new(1.0, 1.0, 1.0) + (a * Color::new(0.5, 0.7, 1.0))
+        }
+        Some(t) => {
+            let normal = (ray.at(t) - sphere.center).normalize();
+            0.5 * Color::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0)
+        }
     }
 }
 
