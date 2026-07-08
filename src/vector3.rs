@@ -5,6 +5,9 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssi
 pub struct PointMarker;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+pub struct DirectionMarker;
+
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vector3InternalMarker;
 
 #[derive(Debug, PartialEq)]
@@ -16,6 +19,8 @@ pub struct Vector3<T> {
 }
 
 pub type Point = Vector3<PointMarker>;
+pub type Direction = Vector3<DirectionMarker>;
+
 
 #[allow(dead_code)] // Used in tests
 type Vec3 = Vector3<Vector3InternalMarker>;
@@ -55,16 +60,16 @@ impl<T> Vector3<T> {
     }
 }
 
-impl<T> Add for Vector3<T> {
-    type Output = Self;
+impl Add<Direction> for Point {
+    type Output = Point;
 
-    fn add(self, other: Self) -> Self {
-        Self::new(self.x + other.x, self.y + other.y, self.z + other.z)
+    fn add(self, other: Direction) -> Point {
+        Point::new(self.x + other.x, self.y + other.y, self.z + other.z)
     }
 }
 
-impl<T> AddAssign for Vector3<T> {
-    fn add_assign(&mut self, other: Self) {
+impl AddAssign<Direction> for Point {
+    fn add_assign(&mut self, other: Direction) {
         self.x += other.x;
         self.y += other.y;
         self.z += other.z;
@@ -157,32 +162,32 @@ impl<T> SubAssign for Vector3<T> {
     }
 }
 
-impl<'a, 'b, T> Add<&'b Vector3<T>> for &'a Vector3<T> {
-    type Output = Vector3<T>;
+impl<'a, 'b> Add<&'b Direction> for &'a Point {
+    type Output = Point;
 
-    fn add(self, other: &'b Vector3<T>) -> Vector3<T> {
+    fn add(self, other: &'b Direction) -> Point {
         *self + *other
     }
 }
 
-impl<'a, T> Add<Vector3<T>> for &'a Vector3<T> {
-    type Output = Vector3<T>;
+impl<'a> Add<Direction> for &'a Point {
+    type Output = Point;
 
-    fn add(self, other: Vector3<T>) -> Vector3<T> {
+    fn add(self, other: Direction) -> Point {
         *self + other
     }
 }
 
-impl<'a, T> Add<&'a Vector3<T>> for Vector3<T> {
-    type Output = Vector3<T>;
+impl<'a> Add<&'a Direction> for Point {
+    type Output = Point;
 
-    fn add(self, other: &'a Vector3<T>) -> Vector3<T> {
+    fn add(self, other: &'a Direction) -> Point {
         self + *other
     }
 }
 
-impl<T> AddAssign<&Vector3<T>> for Vector3<T> {
-    fn add_assign(&mut self, other: &Vector3<T>) {
+impl AddAssign<&Direction> for Point {
+    fn add_assign(&mut self, other: &Direction) {
         self.x += other.x;
         self.y += other.y;
         self.z += other.z;
@@ -299,9 +304,9 @@ mod tests {
 
     #[test]
     fn vector3_add_correct() {
-        let vec1 = Vec3::new(1.0, 1.0, 1.0);
-        let vec2 = Vec3::new(1.0, 2.0, 3.0);
-        let expected_result = Vec3::new(2.0, 3.0, 4.0);
+        let vec1 = Point::new(1.0, 1.0, 1.0);
+        let vec2 = Direction::new(1.0, 2.0, 3.0);
+        let expected_result = Point::new(2.0, 3.0, 4.0);
 
         assert_eq!(vec1 + vec2, expected_result);
         assert_eq!(vec1 + &vec2, expected_result);
@@ -311,14 +316,14 @@ mod tests {
 
     #[test]
     fn vector3_add_assign_correct() {
-        let mut vec1 = Vec3::new(1.0, 1.0, 1.0);
-        let vec2 = Vec3::new(1.0, 2.0, 3.0);
-        let expected_result = Vec3::new(2.0, 3.0, 4.0);
+        let mut vec1 = Point::new(1.0, 1.0, 1.0);
+        let vec2 = Direction::new(1.0, 2.0, 3.0);
+        let expected_result = Point::new(2.0, 3.0, 4.0);
 
         vec1 += vec2;
         assert_eq!(vec1, expected_result);
 
-        vec1 = Vec3::new(1.0, 1.0, 1.0);
+        vec1 = Point::new(1.0, 1.0, 1.0);
         vec1 += &vec2;
         assert_eq!(vec1, expected_result);
     }

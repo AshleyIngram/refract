@@ -1,6 +1,7 @@
 use std::io::stdout;
 
 pub mod color;
+pub mod ray;
 pub mod vector3;
 
 fn main() {
@@ -14,7 +15,6 @@ fn main() {
             let r = i as f32 / (width - 1) as f32;
             let g = j as f32 / (height - 1) as f32;
             let b = 0.0;
-
 
             let color = color::Color::new(r, g, b);
             color.write_ppm(&mut stdout()).unwrap();
