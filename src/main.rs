@@ -1,26 +1,31 @@
 use std::io::stdout;
 
 use crate::color::Color;
+use crate::hittable::Hittable;
+use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
 use crate::vector3::{Direction, Point};
 
 pub mod color;
+pub mod hittable;
+pub mod interval;
 pub mod ray;
 pub mod sphere;
 pub mod vector3;
 
 fn ray_color(ray: &Ray, sphere: &Sphere) -> Color {
-    let intersection_t = sphere.hit(ray);
+    let interval = Interval::new(0.001, f32::INFINITY);
+    let hit_result = sphere.hit(ray, &interval);
 
-    match intersection_t {
+    match hit_result {
         None => {
             let unit_direction = ray.direction.normalize();
             let a = 0.5 * (unit_direction.y + 1.0);
             (1.0 - a) * Color::new(1.0, 1.0, 1.0) + (a * Color::new(0.5, 0.7, 1.0))
         }
-        Some(t) => {
-            let normal = (ray.at(t) - sphere.center).normalize();
+        Some(h) => {
+            let normal = (ray.at(h.t) - sphere.center).normalize();
             0.5 * Color::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0)
         }
     }
