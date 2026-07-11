@@ -14,6 +14,7 @@ pub mod hittable;
 pub mod interval;
 pub mod point;
 pub mod ray;
+pub mod scene;
 pub mod sphere;
 
 fn ray_color(ray: &Ray, sphere: &Sphere) -> Color {
