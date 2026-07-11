@@ -1,18 +1,20 @@
 use std::io::stdout;
 
 use crate::color::Color;
+use crate::direction::Direction;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
+use crate::point::Point;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
-use crate::vector3::{Direction, Point};
 
 pub mod color;
+pub mod direction;
 pub mod hittable;
 pub mod interval;
+pub mod point;
 pub mod ray;
 pub mod sphere;
-pub mod vector3;
 
 fn ray_color(ray: &Ray, sphere: &Sphere) -> Color {
     let interval = Interval::new(0.001, f32::INFINITY);

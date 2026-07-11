@@ -1,4 +1,5 @@
-use crate::vector3::{Direction, Point};
+use crate::direction::Direction;
+use crate::point::Point;
 
 #[derive(Debug, PartialEq)]
 pub struct Ray {

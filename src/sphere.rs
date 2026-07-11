@@ -1,7 +1,7 @@
 use crate::hittable::{HitResult, Hittable};
 use crate::interval::Interval;
+use crate::point::Point;
 use crate::ray::Ray;
-use crate::vector3::Point;
 
 pub struct Sphere {
     pub center: Point,
@@ -19,7 +19,7 @@ impl Hittable for Sphere {
         let direction_to_sphere = self.center - ray.origin;
 
         let a = ray.direction.len_squared();
-        let h = ray.direction.dot(&direction_to_sphere);
+        let h = ray.direction.dot(direction_to_sphere);
         let c = direction_to_sphere.len_squared() - (self.radius * self.radius);
 
         let discriminant = h * h - a * c;
@@ -57,17 +57,14 @@ impl Hittable for Sphere {
 
 #[cfg(test)]
 mod tests {
-    use crate::vector3::Direction;
+    use crate::direction::Direction;
 
-    use super::*;
+use super::*;
 
     #[test]
     fn sphere_hit_from_outside_first_intersection() {
         let sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
-        let ray = Ray::new(
-            Point::new(0.0, 0.0, 0.0),
-            Direction::new(0.0, 0.0, -1.0),
-        );
+        let ray = Ray::new(Point::new(0.0, 0.0, 0.0), Direction::new(0.0, 0.0, -1.0));
         let interval = Interval::new(0.001, f32::INFINITY);
 
         let hit_result = sphere.hit(&ray, &interval);
@@ -81,10 +78,7 @@ mod tests {
     #[test]
     fn sphere_hit_from_inside_second_intersection() {
         let sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
-        let ray = Ray::new(
-            Point::new(0.0, 0.0, -0.9),
-            Direction::new(0.0, 0.0, -1.0),
-        );
+        let ray = Ray::new(Point::new(0.0, 0.0, -0.9), Direction::new(0.0, 0.0, -1.0));
         let interval = Interval::new(0.001, f32::INFINITY);
 
         let hit_result = sphere.hit(&ray, &interval);
@@ -98,10 +92,7 @@ mod tests {
     #[test]
     fn sphere_hit_misses_none() {
         let sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
-        let ray = Ray::new(
-            Point::new(0.0, 0.0, 0.0),
-            Direction::new(0.0, 0.0, 1.0),
-        );
+        let ray = Ray::new(Point::new(0.0, 0.0, 0.0), Direction::new(0.0, 0.0, 1.0));
         let interval = Interval::new(0.001, f32::INFINITY);
 
         let hit_result = sphere.hit(&ray, &interval);

@@ -1,7 +1,8 @@
 use crate::{
+    direction::Direction,
+    point::Point,
     interval::Interval,
     ray::Ray,
-    vector3::{Direction, Point},
 };
 
 pub trait Hittable {
