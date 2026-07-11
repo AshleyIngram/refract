@@ -54,8 +54,10 @@ fn main() {
         - viewport_v / 2.0;
     let pixel00_location = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
-    let sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
-    let scene = SceneBuilder::new().add_object(sphere).build();
+    let scene = SceneBuilder::new()
+        .add_object(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5))
+        .add_object(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0))
+        .build();
 
     println!("P3\n{} {}\n255", width, height);
 
