@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg};
+use std::ops::{Add, AddAssign, Deref, Div, DivAssign, Mul, MulAssign, Neg};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Direction {
@@ -6,6 +6,9 @@ pub struct Direction {
     pub y: f32,
     pub z: f32,
 }
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct UnitDirection(Direction);
 
 impl Direction {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
@@ -32,8 +35,22 @@ impl Direction {
         )
     }
 
-    pub fn normalize(&self) -> Direction {
-        *self / self.len()
+    pub fn normalize(&self) -> UnitDirection {
+        UnitDirection(*self / self.len())
+    }
+}
+
+impl UnitDirection {
+    pub fn normalize(self) -> UnitDirection {
+        self
+    }
+}
+
+impl Deref for UnitDirection {
+    type Target = Direction;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -176,7 +193,7 @@ impl<'a> Neg for &'a Direction {
 mod tests {
     use super::*;
 
-    #[test]
+#[test]
     fn direction_div_correct() {
         let direction = Direction::new(1.0, 2.0, 4.0);
         let expected_result = Direction::new(0.5, 1.0, 2.0);
@@ -184,7 +201,7 @@ mod tests {
         assert_eq!(direction / 2.0, expected_result);
         assert_eq!(&direction / 2.0, expected_result);
     }
-
+    
     #[test]
     #[should_panic(expected = "Division by zero")]
     fn direction_div_by_zero_panics() {
@@ -384,7 +401,7 @@ mod tests {
     #[test]
     fn direction_normalize_correct() {
         let direction = Direction::new(3.0, 4.0, 0.0);
-        let expected_result = Direction::new(0.6, 0.8, 0.0);
+        let expected_result = UnitDirection(Direction::new(0.6, 0.8, 0.0));
         let expected_length = 1.0;
 
         let result = direction.normalize();
