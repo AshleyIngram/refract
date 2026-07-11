@@ -44,13 +44,10 @@ impl Hittable for Sphere {
             }
         };
 
-        root.map(|r| {
-            let point = ray.at(r);
-            HitResult {
-                point,
-                t: r,
-                normal: ((point - self.center) / self.radius),
-            }
+        root.map(|t| {
+            let point = ray.at(t);
+            let normal = ((point - self.center) / self.radius).normalize();
+            HitResult::new(ray, point, t, normal)
         })
     }
 }
@@ -59,7 +56,7 @@ impl Hittable for Sphere {
 mod tests {
     use crate::direction::Direction;
 
-use super::*;
+    use super::*;
 
     #[test]
     fn sphere_hit_from_outside_first_intersection() {
@@ -72,7 +69,9 @@ use super::*;
         assert!(hit_result.is_some());
         let result = hit_result.unwrap();
         assert_eq!(result.t, 0.5);
-        assert_eq!(result.point.z, -0.5)
+        assert_eq!(result.point.z, -0.5);
+        assert_eq!(result.front_face, true);
+        assert_eq!(result.normal.z > 0.0, true);
     }
 
     #[test]
@@ -86,7 +85,9 @@ use super::*;
         assert!(hit_result.is_some());
         let result = hit_result.unwrap();
         assert_eq!(result.t, 0.6);
-        assert_eq!(result.point.z, -1.5)
+        assert_eq!(result.point.z, -1.5);
+        assert_eq!(result.front_face, false);
+        assert_eq!(result.normal.z > 0.0, true);
     }
 
     #[test]

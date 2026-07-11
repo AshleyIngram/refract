@@ -26,10 +26,7 @@ fn ray_color(ray: &Ray, sphere: &Sphere) -> Color {
             let a = 0.5 * (unit_direction.y + 1.0);
             (1.0 - a) * Color::new(1.0, 1.0, 1.0) + (a * Color::new(0.5, 0.7, 1.0))
         }
-        Some(h) => {
-            let normal = (ray.at(h.t) - sphere.center).normalize();
-            0.5 * Color::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0)
-        }
+        Some(h) => 0.5 * Color::new(h.normal.x + 1.0, h.normal.y + 1.0, h.normal.z + 1.0),
     }
 }
 

@@ -164,7 +164,6 @@ impl<'a> Mul<f32> for &'a Direction {
     }
 }
 
-
 impl MulAssign<f32> for Direction {
     fn mul_assign(&mut self, other: f32) {
         self.x *= other;
@@ -193,7 +192,7 @@ impl<'a> Neg for &'a Direction {
 mod tests {
     use super::*;
 
-#[test]
+    #[test]
     fn direction_div_correct() {
         let direction = Direction::new(1.0, 2.0, 4.0);
         let expected_result = Direction::new(0.5, 1.0, 2.0);
@@ -201,7 +200,7 @@ mod tests {
         assert_eq!(direction / 2.0, expected_result);
         assert_eq!(&direction / 2.0, expected_result);
     }
-    
+
     #[test]
     #[should_panic(expected = "Division by zero")]
     fn direction_div_by_zero_panics() {

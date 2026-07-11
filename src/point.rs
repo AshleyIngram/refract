@@ -62,7 +62,6 @@ impl AddAssign<&Direction> for Point {
     }
 }
 
-
 impl Sub<Direction> for Point {
     type Output = Point;
 
