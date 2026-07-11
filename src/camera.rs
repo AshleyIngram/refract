@@ -1,13 +1,11 @@
-use std::io::stdout;
-
 use crate::{
-    color::Color, direction::Direction, hittable::Hittable, interval::Interval, point::Point,
-    ray::Ray, scene::Scene,
+    canvas::Canvas, color::Color, direction::Direction, hittable::Hittable, interval::Interval,
+    point::Point, ray::Ray, scene::Scene,
 };
 
 pub struct Camera {
-    width: i32,
-    height: i32,
+    pub width: i32,
+    pub height: i32,
     camera_center: Point,
     pixel_delta_u: Direction,
     pixel_delta_v: Direction,
@@ -58,9 +56,7 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, scene: &Scene) {
-        println!("P3\n{} {}\n255", self.width, self.height);
-
+    pub fn render(&self, scene: &Scene, canvas: &mut impl Canvas) {
         for i in 0..self.height {
             for j in 0..self.width {
                 let pixel_center =
@@ -69,7 +65,7 @@ impl Camera {
                 let ray = Ray::new(self.camera_center, ray_direction);
 
                 let color = self.ray_color(&ray, &scene);
-                color.write_ppm(&mut stdout()).unwrap();
+                canvas.set_pixel(j as u32, i as u32, color).unwrap();
             }
         }
     }

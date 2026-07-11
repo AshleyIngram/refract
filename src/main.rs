@@ -1,4 +1,5 @@
 use refract::camera::Camera;
+use refract::canvas::PpmCanvas;
 use refract::point::Point;
 use refract::scene::SceneBuilder;
 use refract::sphere::Sphere;
@@ -8,11 +9,12 @@ fn main() {
     let width = 400;
 
     let camera = Camera::new(width, aspect_ratio);
+    let mut canvas = PpmCanvas::new(camera.width, camera.height);
 
     let scene = SceneBuilder::new()
         .add_object(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5))
         .add_object(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0))
         .build();
 
-    camera.render(&scene)
+    camera.render(&scene, &mut canvas);
 }

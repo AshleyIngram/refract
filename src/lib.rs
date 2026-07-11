@@ -1,4 +1,5 @@
 pub mod camera;
+pub mod canvas;
 pub mod color;
 pub mod direction;
 pub mod hittable;
