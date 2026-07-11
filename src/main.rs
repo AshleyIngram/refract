@@ -6,6 +6,7 @@ use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::point::Point;
 use crate::ray::Ray;
+use crate::scene::{Scene, SceneBuilder};
 use crate::sphere::Sphere;
 
 pub mod color;
@@ -17,9 +18,9 @@ pub mod ray;
 pub mod scene;
 pub mod sphere;
 
-fn ray_color(ray: &Ray, sphere: &Sphere) -> Color {
+fn ray_color(ray: &Ray, scene: &Scene) -> Color {
     let interval = Interval::new(0.001, f32::INFINITY);
-    let hit_result = sphere.hit(ray, &interval);
+    let hit_result = scene.hit(ray, &interval);
 
     match hit_result {
         None => {
@@ -54,6 +55,7 @@ fn main() {
     let pixel00_location = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
     let sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
+    let scene = SceneBuilder::new().add_object(sphere).build();
 
     println!("P3\n{} {}\n255", width, height);
 
@@ -64,7 +66,7 @@ fn main() {
             let ray_direction = pixel_center - camera_center;
             let ray = Ray::new(camera_center, ray_direction);
 
-            let color = ray_color(&ray, &sphere);
+            let color = ray_color(&ray, &scene);
             color.write_ppm(&mut stdout()).unwrap();
         }
     }
