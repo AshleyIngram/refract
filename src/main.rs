@@ -1,22 +1,13 @@
 use std::io::stdout;
 
-use crate::color::Color;
-use crate::direction::Direction;
-use crate::hittable::Hittable;
-use crate::interval::Interval;
-use crate::point::Point;
-use crate::ray::Ray;
-use crate::scene::{Scene, SceneBuilder};
-use crate::sphere::Sphere;
-
-pub mod color;
-pub mod direction;
-pub mod hittable;
-pub mod interval;
-pub mod point;
-pub mod ray;
-pub mod scene;
-pub mod sphere;
+use refract::color::Color;
+use refract::direction::Direction;
+use refract::hittable::Hittable;
+use refract::interval::Interval;
+use refract::point::Point;
+use refract::ray::Ray;
+use refract::scene::{Scene, SceneBuilder};
+use refract::sphere::Sphere;
 
 fn ray_color(ray: &Ray, scene: &Scene) -> Color {
     let interval = Interval::new(0.001, f32::INFINITY);
