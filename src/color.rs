@@ -1,6 +1,6 @@
-use std::ops::{Add, Mul};
+use std::ops::{Add, AddAssign, Mul};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Color {
     pub r: f32,
     pub g: f32,
@@ -25,6 +25,14 @@ impl Add<Color> for Color {
     }
 }
 
+impl AddAssign<Color> for Color {
+    fn add_assign(&mut self, other: Color) {
+        self.r += other.r;
+        self.g += other.g;
+        self.b += other.b;
+    }
+}
+
 impl Mul<f32> for Color {
     type Output = Self;
 
@@ -46,5 +54,40 @@ impl Mul<Color> for f32 {
             g: self * other.g,
             b: self * other.b,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn color_add_correct() {
+        let color1 = Color::new(1.0, 2.0, 3.0);
+        let color2 = Color::new(4.0, 5.0, 6.0);
+
+        let result = color1 + color2;
+
+        assert_eq!(result, Color::new(5.0, 7.0, 9.0));
+    }
+
+    #[test]
+    fn color_add_assign_correct() {
+        let mut color = Color::new(1.0, 2.0, 3.0);
+        let color2 = Color::new(4.0, 5.0, 6.0);
+
+        color += color2;
+
+        assert_eq!(color, Color::new(5.0, 7.0, 9.0));
+    }
+
+    #[test]
+    fn color_mul_f32_correct() {
+        let color = Color::new(1.0, 2.0, 3.0);
+        let multiplier = 2.0;
+        let expected_result = Color::new(2.0, 4.0, 6.0);
+
+        assert_eq!(multiplier * color, expected_result);
+        assert_eq!(color * multiplier, expected_result);
     }
 }

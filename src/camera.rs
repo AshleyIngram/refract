@@ -1,3 +1,5 @@
+use rand::{RngExt, rngs::SmallRng};
+
 use crate::{
     canvas::Canvas, color::Color, direction::Direction, hittable::Hittable, interval::Interval,
     point::Point, ray::Ray, scene::Scene,
@@ -10,6 +12,9 @@ pub struct Camera {
     pixel_delta_u: Direction,
     pixel_delta_v: Direction,
     origin: Point,
+    samples_per_pixel: i32,
+    pixel_samples_scale: f32,
+    random_generator: SmallRng,
 }
 
 impl Camera {
@@ -32,6 +37,10 @@ impl Camera {
             - viewport_v / 2.0;
         let origin = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
+        let samples_per_pixel = 10;
+        let pixel_samples_scale = 1.0 / samples_per_pixel as f32;
+        let random_generator: SmallRng = rand::make_rng();
+
         Self {
             width,
             height,
@@ -39,6 +48,9 @@ impl Camera {
             pixel_delta_u,
             pixel_delta_v,
             origin,
+            samples_per_pixel,
+            pixel_samples_scale,
+            random_generator,
         }
     }
 
@@ -56,17 +68,32 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, scene: &Scene, canvas: &mut impl Canvas) {
+    pub fn render(&mut self, scene: &Scene, canvas: &mut impl Canvas) {
         for i in 0..self.height {
             for j in 0..self.width {
-                let pixel_center =
-                    self.origin + (j as f32 * self.pixel_delta_u) + (i as f32 * self.pixel_delta_v);
-                let ray_direction = pixel_center - self.camera_center;
-                let ray = Ray::new(self.camera_center, ray_direction);
+                let mut color = Color::new(0.0, 0.0, 0.0);
 
-                let color = self.ray_color(&ray, &scene);
-                canvas.set_pixel(j as u32, i as u32, color).unwrap();
+                for _sample in 0..self.samples_per_pixel {
+                    let ray = self.get_ray(j, i);
+                    color += self.ray_color(&ray, &scene);
+                }
+
+                canvas
+                    .set_pixel(j as u32, i as u32, color * self.pixel_samples_scale)
+                    .unwrap();
             }
         }
+    }
+
+    fn get_ray(&mut self, u: i32, v: i32) -> Ray {
+        let u_offset = self.random_generator.random_range(-0.5..0.5);
+        let v_offset = self.random_generator.random_range(-0.5..0.5);
+        let pixel_sample = self.origin
+            + ((u as f32 + u_offset) * self.pixel_delta_u)
+            + ((v as f32 + v_offset) * self.pixel_delta_v);
+
+        let ray_direction = pixel_sample - self.camera_center;
+
+        Ray::new(self.camera_center, ray_direction)
     }
 }

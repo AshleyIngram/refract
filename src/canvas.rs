@@ -1,6 +1,6 @@
 use std::io::{Write, stdout};
 
-use crate::color::Color;
+use crate::{color::Color, interval::Interval};
 
 pub trait Canvas {
     fn set_pixel(&mut self, x: u32, y: u32, color: Color) -> Result<(), std::io::Error>;
@@ -31,12 +31,13 @@ impl Canvas for PpmCanvas {
             self.is_initialized = true;
         }
 
+        let intensity = Interval::new(0.0, 0.999);
         write!(
             self.writer,
             "{} {} {}\n",
-            (255.9 * color.r) as i32,
-            (255.9 * color.g) as i32,
-            (255.9 * color.b) as i32
+            (256.0 * intensity.clamp(color.r)) as i32,
+            (256.0 * intensity.clamp(color.g)) as i32,
+            (256.0 * intensity.clamp(color.b)) as i32
         )
     }
 }
