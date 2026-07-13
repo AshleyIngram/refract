@@ -8,7 +8,7 @@ fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let width = 400;
 
-    let mut camera = Camera::new(width, aspect_ratio);
+    let camera = Camera::new(width, aspect_ratio);
     let mut canvas = PpmCanvas::new(camera.width, camera.height);
 
     let scene = SceneBuilder::new()

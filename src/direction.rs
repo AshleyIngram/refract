@@ -1,5 +1,7 @@
 use std::ops::{Add, AddAssign, Deref, Div, DivAssign, Mul, MulAssign, Neg};
 
+use crate::rng;
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Direction {
     pub x: f32,
@@ -38,11 +40,47 @@ impl Direction {
     pub fn normalize(&self) -> UnitDirection {
         UnitDirection(*self / self.len())
     }
+
+    pub fn random() -> Self {
+        Self::new(rng::random(), rng::random(), rng::random())
+    }
+
+    pub fn random_within_range(from: f32, to: f32) -> Self {
+        Self::new(
+            rng::random_range(from..to),
+            rng::random_range(from..to),
+            rng::random_range(from..to),
+        )
+    }
 }
 
 impl UnitDirection {
     pub fn normalize(self) -> UnitDirection {
         self
+    }
+
+    pub fn random_unit_direction() -> UnitDirection {
+        loop {
+            let direction = Direction::random_within_range(-1.0, 1.0);
+            let len_squared = direction.len_squared();
+            if len_squared < f32::EPSILON || len_squared > 1.0 {
+                continue;
+            }
+
+            return direction.normalize();
+        }
+    }
+
+    pub fn random_hemisphere_direction(normal: UnitDirection) -> UnitDirection {
+        Self::orient_to_hemisphere(Self::random_unit_direction(), normal)
+    }
+
+    fn orient_to_hemisphere(direction: UnitDirection, normal: UnitDirection) -> UnitDirection {
+        if direction.dot(*normal) > 0.0 {
+            direction
+        } else {
+            -direction
+        }
     }
 }
 
@@ -184,6 +222,22 @@ impl<'a> Neg for &'a Direction {
     type Output = Direction;
 
     fn neg(self) -> Direction {
+        -*self
+    }
+}
+
+impl Neg for UnitDirection {
+    type Output = UnitDirection;
+
+    fn neg(self) -> Self {
+        UnitDirection(-*self)
+    }
+}
+
+impl<'a> Neg for &'a UnitDirection {
+    type Output = UnitDirection;
+
+    fn neg(self) -> UnitDirection {
         -*self
     }
 }
@@ -411,9 +465,31 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Division by zero")]
-    fn vector3_normalize_zero_correct() {
+    fn direction_normalize_zero_correct() {
         let direction = Direction::new(0.0, 0.0, 0.0);
 
         direction.normalize();
+    }
+
+    #[test]
+    fn orient_to_hemisphere_keeps_outward_direction() {
+        let normal = Direction::new(0.0, 1.0, 0.0).normalize();
+        let outward = Direction::new(0.1, 1.0, 0.2).normalize();
+
+        let result = UnitDirection::orient_to_hemisphere(outward, normal);
+
+        assert_eq!(result, outward);
+        assert!(result.dot(*normal) > 0.0);
+    }
+
+    #[test]
+    fn orient_to_hemisphere_flips_inward_direction() {
+        let normal = Direction::new(0.0, 1.0, 0.0).normalize();
+        let inward = Direction::new(0.1, -1.0, 0.2).normalize();
+
+        let result = UnitDirection::orient_to_hemisphere(inward, normal);
+
+        assert_eq!(result, -inward);
+        assert!(result.dot(*normal) > 0.0);
     }
 }

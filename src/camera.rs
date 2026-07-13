@@ -1,8 +1,13 @@
-use rand::{RngExt, rngs::SmallRng};
-
 use crate::{
-    canvas::Canvas, color::Color, direction::Direction, hittable::Hittable, interval::Interval,
-    point::Point, ray::Ray, scene::Scene,
+    canvas::Canvas,
+    color::Color,
+    direction::{Direction, UnitDirection},
+    hittable::Hittable,
+    interval::Interval,
+    point::Point,
+    ray::Ray,
+    rng,
+    scene::Scene,
 };
 
 pub struct Camera {
@@ -14,7 +19,6 @@ pub struct Camera {
     origin: Point,
     samples_per_pixel: i32,
     pixel_samples_scale: f32,
-    random_generator: SmallRng,
 }
 
 impl Camera {
@@ -39,7 +43,6 @@ impl Camera {
 
         let samples_per_pixel = 10;
         let pixel_samples_scale = 1.0 / samples_per_pixel as f32;
-        let random_generator: SmallRng = rand::make_rng();
 
         Self {
             width,
@@ -50,7 +53,6 @@ impl Camera {
             origin,
             samples_per_pixel,
             pixel_samples_scale,
-            random_generator,
         }
     }
 
@@ -64,18 +66,21 @@ impl Camera {
                 let a = 0.5 * (unit_direction.y + 1.0);
                 (1.0 - a) * Color::new(1.0, 1.0, 1.0) + (a * Color::new(0.5, 0.7, 1.0))
             }
-            Some(h) => 0.5 * Color::new(h.normal.x + 1.0, h.normal.y + 1.0, h.normal.z + 1.0),
+            Some(h) => {
+                let direction = UnitDirection::random_hemisphere_direction(h.normal);
+                0.5 * self.ray_color(&Ray::new(h.point, *direction), scene)
+            }
         }
     }
 
-    pub fn render(&mut self, scene: &Scene, canvas: &mut impl Canvas) {
+    pub fn render(&self, scene: &Scene, canvas: &mut impl Canvas) {
         for i in 0..self.height {
             for j in 0..self.width {
                 let mut color = Color::new(0.0, 0.0, 0.0);
 
                 for _sample in 0..self.samples_per_pixel {
                     let ray = self.get_ray(j, i);
-                    color += self.ray_color(&ray, &scene);
+                    color += self.ray_color(&ray, scene);
                 }
 
                 canvas
@@ -85,9 +90,9 @@ impl Camera {
         }
     }
 
-    fn get_ray(&mut self, u: i32, v: i32) -> Ray {
-        let u_offset = self.random_generator.random_range(-0.5..0.5);
-        let v_offset = self.random_generator.random_range(-0.5..0.5);
+    fn get_ray(&self, u: i32, v: i32) -> Ray {
+        let u_offset = rng::random_range(-0.5..0.5);
+        let v_offset = rng::random_range(-0.5..0.5);
         let pixel_sample = self.origin
             + ((u as f32 + u_offset) * self.pixel_delta_u)
             + ((v as f32 + v_offset) * self.pixel_delta_v);
