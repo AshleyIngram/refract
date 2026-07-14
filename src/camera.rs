@@ -22,6 +22,8 @@ pub struct Camera {
 }
 
 impl Camera {
+    const MAX_DEPTH: i32 = 10;
+
     pub fn new(width: i32, aspect_ratio: f64) -> Self {
         let height = ((width as f64 / aspect_ratio) as i32).max(1);
         let focal_length = 1.0;
@@ -56,7 +58,11 @@ impl Camera {
         }
     }
 
-    pub fn ray_color(&self, ray: &Ray, scene: &Scene) -> Color {
+    pub fn ray_color(&self, ray: &Ray, depth: i32, scene: &Scene) -> Color {
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+
         let interval = Interval::new(0.001, f32::INFINITY);
         let hit_result = scene.hit(ray, &interval);
 
@@ -68,7 +74,7 @@ impl Camera {
             }
             Some(h) => {
                 let direction = UnitDirection::random_hemisphere_direction(h.normal);
-                0.5 * self.ray_color(&Ray::new(h.point, *direction), scene)
+                0.5 * self.ray_color(&Ray::new(h.point, *direction), depth - 1, scene)
             }
         }
     }
@@ -80,7 +86,7 @@ impl Camera {
 
                 for _sample in 0..self.samples_per_pixel {
                     let ray = self.get_ray(j, i);
-                    color += self.ray_color(&ray, scene);
+                    color += self.ray_color(&ray, Self::MAX_DEPTH, scene);
                 }
 
                 canvas
