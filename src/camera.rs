@@ -17,12 +17,12 @@ pub struct Camera {
     pixel_delta_u: Direction,
     pixel_delta_v: Direction,
     origin: Point,
-    samples_per_pixel: i32,
-    pixel_samples_scale: f32,
 }
 
 impl Camera {
-    const MAX_DEPTH: i32 = 10;
+    const MAX_DEPTH: i32 = 50;
+    const SAMPLES_PER_PIXEL: i32 = 100;
+    const PIXEL_SAMPLES_SCALE: f32 = 1.0 / Self::SAMPLES_PER_PIXEL as f32;
 
     pub fn new(width: i32, aspect_ratio: f64) -> Self {
         let height = ((width as f64 / aspect_ratio) as i32).max(1);
@@ -43,9 +43,6 @@ impl Camera {
             - viewport_v / 2.0;
         let origin = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
-        let samples_per_pixel = 10;
-        let pixel_samples_scale = 1.0 / samples_per_pixel as f32;
-
         Self {
             width,
             height,
@@ -53,8 +50,6 @@ impl Camera {
             pixel_delta_u,
             pixel_delta_v,
             origin,
-            samples_per_pixel,
-            pixel_samples_scale,
         }
     }
 
@@ -84,13 +79,13 @@ impl Camera {
             for j in 0..self.width {
                 let mut color = Color::new(0.0, 0.0, 0.0);
 
-                for _sample in 0..self.samples_per_pixel {
+                for _sample in 0..Self::SAMPLES_PER_PIXEL {
                     let ray = self.get_ray(j, i);
                     color += self.ray_color(&ray, Self::MAX_DEPTH, scene);
                 }
 
                 canvas
-                    .set_pixel(j as u32, i as u32, color * self.pixel_samples_scale)
+                    .set_pixel(j as u32, i as u32, color * Self::PIXEL_SAMPLES_SCALE)
                     .unwrap();
             }
         }
