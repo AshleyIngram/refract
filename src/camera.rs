@@ -68,8 +68,8 @@ impl Camera {
                 (1.0 - a) * Color::new(1.0, 1.0, 1.0) + (a * Color::new(0.5, 0.7, 1.0))
             }
             Some(h) => {
-                let direction = UnitDirection::random_hemisphere_direction(h.normal);
-                0.5 * self.ray_color(&Ray::new(h.point, *direction), depth - 1, scene)
+                let direction = *h.normal + *UnitDirection::random_unit_direction();
+                0.5 * self.ray_color(&Ray::new(h.point, direction), depth - 1, scene)
             }
         }
     }
