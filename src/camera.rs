@@ -19,10 +19,16 @@ pub struct Camera {
     origin: Point,
 }
 
+enum ReflectionType {
+    Diffuse,
+    Lambertian,
+}
+
 impl Camera {
     const MAX_DEPTH: i32 = 50;
     const SAMPLES_PER_PIXEL: i32 = 100;
     const PIXEL_SAMPLES_SCALE: f32 = 1.0 / Self::SAMPLES_PER_PIXEL as f32;
+    const REFLECTION_TYPE: ReflectionType = ReflectionType::Lambertian;
 
     pub fn new(width: i32, aspect_ratio: f64) -> Self {
         let height = ((width as f64 / aspect_ratio) as i32).max(1);
@@ -68,7 +74,15 @@ impl Camera {
                 (1.0 - a) * Color::new(1.0, 1.0, 1.0) + (a * Color::new(0.5, 0.7, 1.0))
             }
             Some(h) => {
-                let direction = *h.normal + *UnitDirection::random_unit_direction();
+                let direction = match Self::REFLECTION_TYPE {
+                    ReflectionType::Diffuse => {
+                        *h.normal + *UnitDirection::random_unit_direction()
+                    }
+                    ReflectionType::Lambertian => {
+                        *UnitDirection::random_hemisphere_direction(h.normal)
+                    }
+                };
+
                 0.5 * self.ray_color(&Ray::new(h.point, direction), depth - 1, scene)
             }
         }
