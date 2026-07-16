@@ -35,12 +35,12 @@ fn main() {
         .add_object(Sphere::new(
             Point::new(-1.0, 0.0, -1.0),
             0.5,
-            Arc::new(Metal::new(Color::new(0.8, 0.8, 0.8))),
+            Arc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.3)),
         ))
         .add_object(Sphere::new(
             Point::new(1.0, 0.0, -1.0),
             0.5,
-            Arc::new(Metal::new(Color::new(0.8, 0.6, 0.2))),
+            Arc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0)),
         ))
         .build();
 

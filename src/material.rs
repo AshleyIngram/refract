@@ -56,23 +56,32 @@ impl Material for Matte {
 
 pub struct Metal {
     albedo: Color,
+    fuzz: f32,
 }
 
 impl Metal {
-    pub fn new(albedo: Color) -> Self {
-        Self { albedo }
+    pub fn new(albedo: Color, fuzz: f32) -> Self {
+        Self {
+            albedo,
+            fuzz: fuzz.clamp(0.0, 1.0),
+        }
     }
 }
 
 impl Material for Metal {
     fn scatter(&self, ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
-        let reflected = ray.direction.reflect(hit_result.normal);
+        let reflected = (*ray.direction.reflect(hit_result.normal).normalize())
+            + (self.fuzz * *UnitDirection::random_unit_direction());
         let scattered = Ray::new(hit_result.point, reflected);
 
-        Some(ScatterResult {
-            attenuation: self.albedo,
-            scattered,
-        })
+        if scattered.direction.dot(*hit_result.normal) > 0.0 {
+            Some(ScatterResult {
+                attenuation: self.albedo,
+                scattered,
+            })
+        } else {
+            None
+        }
     }
 }
 
@@ -85,12 +94,12 @@ mod tests {
     use super::*;
 
     fn hit_result_at(
+        incident: &Ray,
         point: Point,
         outward_normal: UnitDirection,
         material: Arc<dyn Material>,
     ) -> HitResult {
-        let ray = Ray::new(Point::new(0.0, 0.0, 0.0), Direction::new(0.0, 0.0, -1.0));
-        HitResult::new(&ray, point, 1.0, outward_normal, material)
+        HitResult::new(incident, point, 1.0, outward_normal, material)
     }
 
     #[test]
@@ -99,8 +108,8 @@ mod tests {
         let matte: Arc<dyn Material> = Arc::new(Matte::new(albedo, ReflectionType::Lambertian));
         let point = Point::new(0.0, 0.0, -1.0);
         let normal = Direction::new(0.0, 1.0, 0.0).normalize();
-        let hit = hit_result_at(point, normal, Arc::clone(&matte));
         let incident = Ray::new(Point::new(0.0, 0.0, 0.0), Direction::new(0.0, -1.0, 0.0));
+        let hit = hit_result_at(&incident, point, normal, Arc::clone(&matte));
 
         let scatter = matte.scatter(&incident, &hit).unwrap();
 
@@ -115,8 +124,8 @@ mod tests {
         ));
         let point = Point::new(1.0, 2.0, 3.0);
         let normal = Direction::new(0.0, 1.0, 0.0).normalize();
-        let hit = hit_result_at(point, normal, Arc::clone(&matte));
         let incident = Ray::new(Point::new(0.0, 0.0, 0.0), Direction::new(0.0, -1.0, 0.0));
+        let hit = hit_result_at(&incident, point, normal, Arc::clone(&matte));
 
         let scatter = matte.scatter(&incident, &hit).unwrap();
 
@@ -132,8 +141,8 @@ mod tests {
         ));
         let point = Point::new(0.0, 0.0, 0.0);
         let normal = Direction::new(0.0, 1.0, 0.0).normalize();
-        let hit = hit_result_at(point, normal, Arc::clone(&matte));
         let incident = Ray::new(Point::new(0.0, 1.0, 0.0), Direction::new(0.0, -1.0, 0.0));
+        let hit = hit_result_at(&incident, point, normal, Arc::clone(&matte));
 
         let first = matte.scatter(&incident, &hit).unwrap();
         crate::rng::reseed(99);
@@ -145,11 +154,11 @@ mod tests {
     #[test]
     fn metal_scatter_reflects_off_floor() {
         let albedo = Color::new(0.8, 0.6, 0.2);
-        let metal: Arc<dyn Material> = Arc::new(Metal::new(albedo));
+        let metal: Arc<dyn Material> = Arc::new(Metal::new(albedo, 0.0));
         let point = Point::new(0.0, 0.0, -1.0);
         let normal = Direction::new(0.0, 1.0, 0.0).normalize();
-        let hit = hit_result_at(point, normal, Arc::clone(&metal));
         let incident = Ray::new(Point::new(0.0, 1.0, 0.0), Direction::new(0.0, -1.0, 0.0));
+        let hit = hit_result_at(&incident, point, normal, Arc::clone(&metal));
 
         let scatter = metal.scatter(&incident, &hit).unwrap();
 
@@ -160,14 +169,14 @@ mod tests {
 
     #[test]
     fn metal_scatter_reflects_at_45_degrees() {
-        let metal: Arc<dyn Material> = Arc::new(Metal::new(Color::new(1.0, 1.0, 1.0)));
+        let metal: Arc<dyn Material> = Arc::new(Metal::new(Color::new(1.0, 1.0, 1.0), 0.0));
         let point = Point::new(0.0, 0.0, 0.0);
         let normal = Direction::new(0.0, 1.0, 0.0).normalize();
-        let hit = hit_result_at(point, normal, Arc::clone(&metal));
         let incident = Ray::new(Point::new(-1.0, 1.0, 0.0), Direction::new(1.0, -1.0, 0.0));
+        let hit = hit_result_at(&incident, point, normal, Arc::clone(&metal));
 
         let scatter = metal.scatter(&incident, &hit).unwrap();
 
-        assert_eq!(scatter.scattered.direction, Direction::new(1.0, 1.0, 0.0));
+        assert_eq!(scatter.scattered.direction, *Direction::new(1.0, 1.0, 0.0).normalize());
     }
 }
