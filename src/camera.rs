@@ -20,6 +20,7 @@ pub struct Camera {
 }
 
 enum ReflectionType {
+    #[allow(dead_code, reason = "Will be used by the user to select the reflection type")]
     Diffuse,
     Lambertian,
 }
