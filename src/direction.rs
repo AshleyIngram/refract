@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Deref, Div, DivAssign, Mul, MulAssign, Neg};
+use std::ops::{Add, AddAssign, Deref, Div, DivAssign, Mul, MulAssign, Neg, Sub};
 
 use crate::rng;
 
@@ -51,6 +51,14 @@ impl Direction {
             rng::random_range(from..to),
             rng::random_range(from..to),
         )
+    }
+
+    pub fn near_zero(&self) -> bool {
+        self.x.abs() < f32::EPSILON && self.y.abs() < f32::EPSILON && self.z.abs() < f32::EPSILON
+    }
+
+    pub fn reflect(&self, normal: UnitDirection) -> Direction {
+        *self - (2.0 * self.dot(*normal) * *normal)
     }
 }
 
@@ -239,6 +247,14 @@ impl<'a> Neg for &'a UnitDirection {
 
     fn neg(self) -> UnitDirection {
         -*self
+    }
+}
+
+impl Sub<Direction> for Direction {
+    type Output = Direction;
+
+    fn sub(self, other: Direction) -> Direction {
+        self + (-other)
     }
 }
 
@@ -491,5 +507,71 @@ mod tests {
 
         assert_eq!(result, -inward);
         assert!(result.dot(*normal) > 0.0);
+    }
+
+    #[test]
+    fn near_zero_correct() {
+        let near_zero = Direction::new(f32::EPSILON / 2.0, f32::EPSILON / 2.0, f32::EPSILON / 2.0);
+        let not_near_zero = Direction::new(1.0, 1.0, 1.0);
+
+        assert!(near_zero.near_zero());
+        assert!(!not_near_zero.near_zero());
+    }
+
+    #[test]
+    fn reflect_off_floor_flips_vertical_component() {
+        // Ray straight down, floor normal up
+        let incident = Direction::new(0.0, -1.0, 0.0);
+        let normal = Direction::new(0.0, 1.0, 0.0).normalize();
+
+        let result = incident.reflect(normal);
+
+        assert_eq!(result, Direction::new(0.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn reflect_off_vertical_wall_reverses_horizontal() {
+        let incident = Direction::new(1.0, 0.0, 0.0);
+        let normal = Direction::new(-1.0, 0.0, 0.0).normalize();
+
+        let result = incident.reflect(normal);
+
+        assert_eq!(result, Direction::new(-1.0, 0.0, 0.0));
+    }
+    #[test]
+    fn reflect_grazing_ray_unchanged() {
+        let incident = Direction::new(1.0, 0.0, 0.0);
+        let normal = Direction::new(0.0, 1.0, 0.0).normalize();
+
+        let result = incident.reflect(normal);
+
+        assert_eq!(result, incident);
+    }
+    #[test]
+    fn reflect_45_degree_incidence() {
+        let incident = Direction::new(1.0, -1.0, 0.0);
+        let normal = Direction::new(0.0, 1.0, 0.0).normalize();
+
+        let result = incident.reflect(normal);
+
+        assert_eq!(result, Direction::new(1.0, 1.0, 0.0));
+    }
+    #[test]
+    fn reflect_head_on_reverses_direction() {
+        let incident = Direction::new(0.0, 0.0, -1.0);
+        let normal = Direction::new(0.0, 0.0, 1.0).normalize();
+
+        let result = incident.reflect(normal);
+
+        assert_eq!(result, Direction::new(0.0, 0.0, 1.0));
+    }
+    #[test]
+    fn reflect_incident_angle_equals_reflected_angle() {
+        let incident = Direction::new(3.0, -4.0, 0.0);
+        let normal = Direction::new(0.0, 1.0, 0.0).normalize();
+
+        let reflected = incident.reflect(normal);
+
+        assert!((incident.dot(*normal) + reflected.dot(*normal)).abs() < 1e-5);
     }
 }

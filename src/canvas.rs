@@ -32,20 +32,34 @@ impl Canvas for PpmCanvas {
         }
 
         let intensity = Interval::new(0.0, 0.999);
+        let gamma_corrected_color = linear_to_gamma(color);
+
         write!(
             self.writer,
             "{} {} {}\n",
-            (256.0 * intensity.clamp(linear_to_gamma(color).r)) as i32,
-            (256.0 * intensity.clamp(linear_to_gamma(color).g)) as i32,
-            (256.0 * intensity.clamp(linear_to_gamma(color).b)) as i32
+            (256.0 * intensity.clamp(gamma_corrected_color.r)) as i32,
+            (256.0 * intensity.clamp(gamma_corrected_color.g)) as i32,
+            (256.0 * intensity.clamp(gamma_corrected_color.b)) as i32
         )
     }
 }
 
 fn linear_to_gamma(color: Color) -> Color {
     Color::new(
-        if color.r > 0.0 { color.r.sqrt() } else { color.r },
-        if color.g > 0.0 { color.g.sqrt() } else { color.g },
-        if color.b > 0.0 { color.b.sqrt() } else { color.b }
+        if color.r > 0.0 {
+            color.r.sqrt()
+        } else {
+            color.r
+        },
+        if color.g > 0.0 {
+            color.g.sqrt()
+        } else {
+            color.g
+        },
+        if color.b > 0.0 {
+            color.b.sqrt()
+        } else {
+            color.b
+        },
     )
 }

@@ -1,13 +1,6 @@
 use crate::{
-    canvas::Canvas,
-    color::Color,
-    direction::{Direction, UnitDirection},
-    hittable::Hittable,
-    interval::Interval,
-    point::Point,
-    ray::Ray,
-    rng,
-    scene::Scene,
+    canvas::Canvas, color::Color, direction::Direction, hittable::Hittable, interval::Interval,
+    point::Point, ray::Ray, rng, scene::Scene,
 };
 
 pub struct Camera {
@@ -19,17 +12,10 @@ pub struct Camera {
     origin: Point,
 }
 
-enum ReflectionType {
-    #[allow(dead_code, reason = "Will be used by the user to select the reflection type")]
-    Diffuse,
-    Lambertian,
-}
-
 impl Camera {
     const MAX_DEPTH: i32 = 50;
     const SAMPLES_PER_PIXEL: i32 = 100;
     const PIXEL_SAMPLES_SCALE: f32 = 1.0 / Self::SAMPLES_PER_PIXEL as f32;
-    const REFLECTION_TYPE: ReflectionType = ReflectionType::Lambertian;
 
     pub fn new(width: i32, aspect_ratio: f64) -> Self {
         let height = ((width as f64 / aspect_ratio) as i32).max(1);
@@ -75,16 +61,14 @@ impl Camera {
                 (1.0 - a) * Color::new(1.0, 1.0, 1.0) + (a * Color::new(0.5, 0.7, 1.0))
             }
             Some(h) => {
-                let direction = match Self::REFLECTION_TYPE {
-                    ReflectionType::Diffuse => {
-                        *h.normal + *UnitDirection::random_unit_direction()
+                let scatter_result = h.material.scatter(ray, &h);
+                match scatter_result {
+                    Some(scatter_result) => {
+                        scatter_result.attenuation
+                            * self.ray_color(&scatter_result.scattered, depth - 1, scene)
                     }
-                    ReflectionType::Lambertian => {
-                        *UnitDirection::random_hemisphere_direction(h.normal)
-                    }
-                };
-
-                0.5 * self.ray_color(&Ray::new(h.point, direction), depth - 1, scene)
+                    None => Color::new(0.0, 0.0, 0.0),
+                }
             }
         }
     }

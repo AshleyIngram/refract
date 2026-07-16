@@ -50,7 +50,13 @@ impl Hittable for Scene {
 
 #[cfg(test)]
 mod tests {
-    use crate::{direction::Direction, point::Point, sphere::Sphere};
+    use crate::{
+        color::Color,
+        direction::Direction,
+        material::{Matte, ReflectionType},
+        point::Point,
+        sphere::Sphere,
+    };
 
     use super::*;
 
@@ -67,8 +73,22 @@ mod tests {
 
     #[test]
     fn scene_hit_multiple_returns_closest() {
-        let near = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
-        let far = Sphere::new(Point::new(0.0, 0.0, -3.0), 0.5);
+        let near = Sphere::new(
+            Point::new(0.0, 0.0, -1.0),
+            0.5,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        );
+        let far = Sphere::new(
+            Point::new(0.0, 0.0, -3.0),
+            0.5,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        );
         let scene = SceneBuilder::new().add_object(near).add_object(far).build();
         let ray = Ray::new(Point::new(0.0, 0.0, 0.0), Direction::new(0.0, 0.0, -1.0));
         let interval = Interval::new(0.0, f32::INFINITY);
@@ -83,8 +103,22 @@ mod tests {
 
     #[test]
     fn scene_hit_two_spheres_misses_returns_none() {
-        let near = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
-        let far = Sphere::new(Point::new(0.0, 0.0, -3.0), 0.5);
+        let near = Sphere::new(
+            Point::new(0.0, 0.0, -1.0),
+            0.5,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        );
+        let far = Sphere::new(
+            Point::new(0.0, 0.0, -3.0),
+            0.5,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        );
         let scene = SceneBuilder::new().add_object(near).add_object(far).build();
         let ray = Ray::new(Point::new(0.0, 0.0, 0.0), Direction::new(0.0, 0.0, 1.0));
         let interval = Interval::new(0.0, f32::INFINITY);

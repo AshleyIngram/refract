@@ -57,6 +57,18 @@ impl Mul<Color> for f32 {
     }
 }
 
+impl Mul<Color> for Color {
+    type Output = Self;
+
+    fn mul(self, other: Color) -> Self {
+        Self {
+            r: self.r * other.r,
+            g: self.g * other.g,
+            b: self.b * other.b,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -89,5 +101,14 @@ mod tests {
 
         assert_eq!(multiplier * color, expected_result);
         assert_eq!(color * multiplier, expected_result);
+    }
+
+    #[test]
+    fn color_mul_color_correct() {
+        let color1 = Color::new(1.0, 2.0, 3.0);
+        let color2 = Color::new(4.0, 5.0, 6.0);
+        let expected_result = Color::new(4.0, 10.0, 18.0);
+
+        assert_eq!(color1 * color2, expected_result);
     }
 }

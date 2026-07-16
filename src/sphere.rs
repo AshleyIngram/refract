@@ -1,16 +1,24 @@
+use std::sync::Arc;
+
 use crate::hittable::{HitResult, Hittable};
 use crate::interval::Interval;
+use crate::material::Material;
 use crate::point::Point;
 use crate::ray::Ray;
 
 pub struct Sphere {
     pub center: Point,
     pub radius: f32,
+    pub material: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point, radius: f32) -> Self {
-        Self { center, radius }
+    pub fn new(center: Point, radius: f32, material: Arc<dyn Material>) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -47,20 +55,31 @@ impl Hittable for Sphere {
         root.map(|t| {
             let point = ray.at(t);
             let normal = ((point - self.center) / self.radius).normalize();
-            HitResult::new(ray, point, t, normal)
+            HitResult::new(ray, point, t, normal, Arc::clone(&self.material))
         })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::direction::Direction;
+    use crate::{
+        color::Color,
+        direction::Direction,
+        material::{Matte, ReflectionType},
+    };
 
     use super::*;
 
     #[test]
     fn sphere_hit_from_outside_first_intersection() {
-        let sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
+        let sphere = Sphere::new(
+            Point::new(0.0, 0.0, -1.0),
+            0.5,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        );
         let ray = Ray::new(Point::new(0.0, 0.0, 0.0), Direction::new(0.0, 0.0, -1.0));
         let interval = Interval::new(0.001, f32::INFINITY);
 
@@ -76,7 +95,14 @@ mod tests {
 
     #[test]
     fn sphere_hit_from_inside_second_intersection() {
-        let sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
+        let sphere = Sphere::new(
+            Point::new(0.0, 0.0, -1.0),
+            0.5,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        );
         let ray = Ray::new(Point::new(0.0, 0.0, -0.9), Direction::new(0.0, 0.0, -1.0));
         let interval = Interval::new(0.001, f32::INFINITY);
 
@@ -92,7 +118,14 @@ mod tests {
 
     #[test]
     fn sphere_hit_misses_none() {
-        let sphere = Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5);
+        let sphere = Sphere::new(
+            Point::new(0.0, 0.0, -1.0),
+            0.5,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        );
         let ray = Ray::new(Point::new(0.0, 0.0, 0.0), Direction::new(0.0, 0.0, 1.0));
         let interval = Interval::new(0.001, f32::INFINITY);
 

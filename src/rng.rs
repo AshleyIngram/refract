@@ -27,3 +27,9 @@ where
 {
     RNG.with(|rng| rng.borrow_mut().random())
 }
+
+#[cfg(test)]
+pub fn reseed(seed: u64) {
+    use rand::SeedableRng;
+    RNG.with(|rng| *rng.borrow_mut() = SmallRng::seed_from_u64(seed));
+}
