@@ -17,25 +17,33 @@ impl Camera {
     const SAMPLES_PER_PIXEL: i32 = 100;
     const PIXEL_SAMPLES_SCALE: f32 = 1.0 / Self::SAMPLES_PER_PIXEL as f32;
 
-    pub fn new(width: i32, aspect_ratio: f64, vertical_field_of_view: f32) -> Self {
+    pub fn new(
+        width: i32,
+        aspect_ratio: f64,
+        vertical_field_of_view: f32,
+        camera_center: Point,
+        look_at: Point,
+        camera_up_direction: Direction,
+    ) -> Self {
         let height = ((width as f64 / aspect_ratio) as i32).max(1);
-        let focal_length = 1.0;
+        let focal_length = (look_at - camera_center).len();
         let theta = vertical_field_of_view.to_radians();
         let h = f32::tan(theta / 2.0);
         let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (width as f64 / height as f64) as f32;
-        let camera_center = Point::new(0.0, 0.0, 0.0);
 
-        let viewport_u = Direction::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Direction::new(0.0, -viewport_height, 0.0);
+        let w = (camera_center - look_at).normalize();
+        let u = camera_up_direction.cross(*w).normalize();
+        let v = w.cross(*u).normalize();
+
+        let viewport_u = viewport_width * *u;
+        let viewport_v = viewport_height * *-v;
 
         let pixel_delta_u = viewport_u / (width as f32);
         let pixel_delta_v = viewport_v / (height as f32);
 
-        let viewport_upper_left = camera_center
-            - Direction::new(0.0, 0.0, focal_length)
-            - viewport_u / 2.0
-            - viewport_v / 2.0;
+        let viewport_upper_left =
+            camera_center - focal_length * *w - viewport_u / 2.0 - viewport_v / 2.0;
         let origin = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
         Self {
