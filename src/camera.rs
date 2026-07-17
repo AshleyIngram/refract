@@ -17,10 +17,12 @@ impl Camera {
     const SAMPLES_PER_PIXEL: i32 = 100;
     const PIXEL_SAMPLES_SCALE: f32 = 1.0 / Self::SAMPLES_PER_PIXEL as f32;
 
-    pub fn new(width: i32, aspect_ratio: f64) -> Self {
+    pub fn new(width: i32, aspect_ratio: f64, vertical_field_of_view: f32) -> Self {
         let height = ((width as f64 / aspect_ratio) as i32).max(1);
         let focal_length = 1.0;
-        let viewport_height = 2.0;
+        let theta = vertical_field_of_view.to_radians();
+        let h = f32::tan(theta / 2.0);
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (width as f64 / height as f64) as f32;
         let camera_center = Point::new(0.0, 0.0, 0.0);
 
