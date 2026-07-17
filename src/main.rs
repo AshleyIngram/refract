@@ -12,7 +12,7 @@ use refract::sphere::Sphere;
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let width = 400;
-    let field_of_view = 90.0;
+    let field_of_view = 20.0;
     let camera_center = Point::new(-2.0, 2.0, 1.0);
     let look_at = Point::new(0.0, 0.0, -1.0);
     let camera_up_direction = Direction::new(0.0, 1.0, 0.0);
