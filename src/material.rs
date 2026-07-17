@@ -85,6 +85,35 @@ impl Material for Metal {
     }
 }
 
+pub struct Dielectric {
+    refractive_index: f32,
+}
+
+impl Dielectric {
+    pub fn new(refractive_index: f32) -> Self {
+        Self { refractive_index }
+    }
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
+        let attenuation = Color::new(1.0, 1.0, 1.0);
+        let (from_index, to_index) = if hit_result.front_face {
+            (1.0, self.refractive_index)
+        } else {
+            (self.refractive_index, 1.0)
+        };
+
+        let unit_direction = *ray.direction.normalize();
+        let refracted = unit_direction.refract(hit_result.normal, from_index, to_index);
+
+        Some(ScatterResult {
+            attenuation,
+            scattered: Ray::new(hit_result.point, refracted),
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -177,6 +206,9 @@ mod tests {
 
         let scatter = metal.scatter(&incident, &hit).unwrap();
 
-        assert_eq!(scatter.scattered.direction, *Direction::new(1.0, 1.0, 0.0).normalize());
+        assert_eq!(
+            scatter.scattered.direction,
+            *Direction::new(1.0, 1.0, 0.0).normalize()
+        );
     }
 }

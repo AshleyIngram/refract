@@ -60,6 +60,20 @@ impl Direction {
     pub fn reflect(&self, normal: UnitDirection) -> Direction {
         *self - (2.0 * self.dot(*normal) * *normal)
     }
+
+    pub fn refract(
+        &self,
+        normal: UnitDirection,
+        from_refractive_index: f32,
+        to_refractive_index: f32,
+    ) -> Direction {
+        let etai_over_etat = from_refractive_index / to_refractive_index;
+        let cos_theta = f32::min(-self.dot(*normal), 1.0);
+        let out_perpendicular = etai_over_etat * (*self + cos_theta * *normal);
+        let out_parallel = -f32::sqrt(f32::abs(1.0 - out_perpendicular.len_squared())) * *normal;
+
+        out_perpendicular + out_parallel
+    }
 }
 
 impl UnitDirection {
@@ -573,5 +587,48 @@ mod tests {
         let reflected = incident.reflect(normal);
 
         assert!((incident.dot(*normal) + reflected.dot(*normal)).abs() < 1e-5);
+    }
+
+    #[test]
+    fn refract_normal_incidence_continues_straight() {
+        let incident = Direction::new(0.0, -1.0, 0.0);
+        let normal = Direction::new(0.0, 1.0, 0.0).normalize();
+
+        let result = incident.refract(normal, 1.0, 1.5);
+
+        assert_eq!(result, Direction::new(0.0, -1.0, 0.0));
+    }
+
+    #[test]
+    fn refract_air_to_glass_at_45_degrees() {
+        let incident = Direction::new(1.0, -1.0, 0.0).normalize();
+        let normal = Direction::new(0.0, 1.0, 0.0).normalize();
+
+        let result = incident.refract(normal, 1.0, 1.5);
+
+        assert!((result.x - 0.47140452).abs() < 1e-5);
+        assert!((result.y - (-0.8819171)).abs() < 1e-5);
+        assert_eq!(result.z, 0.0);
+    }
+
+    #[test]
+    fn refract_into_denser_medium_bends_toward_normal() {
+        let incident = Direction::new(1.0, -1.0, 0.0).normalize();
+        let normal = Direction::new(0.0, 1.0, 0.0).normalize();
+
+        let refracted = incident.refract(normal, 1.0, 1.5);
+
+        assert!(-refracted.dot(*normal) > -incident.dot(*normal));
+    }
+
+    #[test]
+    fn refract_air_to_glass_differs_from_glass_to_air() {
+        let incident = Direction::new(1.0, -1.0, 0.0).normalize();
+        let normal = Direction::new(0.0, 1.0, 0.0).normalize();
+
+        let into_glass = incident.refract(normal, 1.0, 1.5);
+        let out_of_glass = incident.refract(normal, 1.5, 1.0);
+
+        assert_ne!(into_glass, out_of_glass);
     }
 }

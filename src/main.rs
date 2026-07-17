@@ -3,7 +3,7 @@ use std::sync::Arc;
 use refract::camera::Camera;
 use refract::canvas::PpmCanvas;
 use refract::color::Color;
-use refract::material::{Matte, Metal, ReflectionType};
+use refract::material::{Dielectric, Matte, Metal, ReflectionType};
 use refract::point::Point;
 use refract::scene::SceneBuilder;
 use refract::sphere::Sphere;
@@ -35,12 +35,12 @@ fn main() {
         .add_object(Sphere::new(
             Point::new(-1.0, 0.0, -1.0),
             0.5,
-            Arc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.3)),
+            Arc::new(Dielectric::new(1.5)),
         ))
         .add_object(Sphere::new(
             Point::new(1.0, 0.0, -1.0),
             0.5,
-            Arc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0)),
+            Arc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.0)),
         ))
         .build();
 
