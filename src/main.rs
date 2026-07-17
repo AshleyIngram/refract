@@ -17,7 +17,7 @@ fn main() {
 
     let scene = SceneBuilder::new()
         .add_object(Sphere::new(
-            Point::new(0.0, 0.0, -1.0),
+            Point::new(0.0, 0.0, -1.2),
             0.5,
             Arc::new(Matte::new(
                 Color::new(0.1, 0.2, 0.5),
@@ -35,7 +35,12 @@ fn main() {
         .add_object(Sphere::new(
             Point::new(-1.0, 0.0, -1.0),
             0.5,
-            Arc::new(Dielectric::new(1.0 / 1.33)),
+            Arc::new(Dielectric::new(1.5)),
+        ))
+        .add_object(Sphere::new(
+            Point::new(-1.0, 0.0, -1.0),
+            0.4,
+            Arc::new(Dielectric::new(1.0 / 1.5)),
         ))
         .add_object(Sphere::new(
             Point::new(1.0, 0.0, -1.0),

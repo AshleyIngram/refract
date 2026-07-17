@@ -1,4 +1,6 @@
-use crate::{color::Color, direction::UnitDirection, hittable::HitResult, ray::Ray};
+use crate::{
+    color::Color, direction::UnitDirection, hittable::HitResult, ray::Ray, rng::random_range,
+};
 
 pub enum ReflectionType {
     #[allow(
@@ -93,6 +95,14 @@ impl Dielectric {
     pub fn new(refractive_index: f32) -> Self {
         Self { refractive_index }
     }
+
+    /// Reflectance determines the ratio of light that is reflected vs refracted for a given Ray intersecting with a Material at a given angle.
+    ///
+    /// Uses Schlick's approximation to calculate the reflectance.
+    fn reflectance(&self, cosine: f32, refractive_ratio: f32) -> f32 {
+        let r0 = f32::powi((1.0 - refractive_ratio) / (1.0 + refractive_ratio), 2);
+        r0 + (1.0 - r0) * f32::powi(1.0 - cosine, 5)
+    }
 }
 
 impl Material for Dielectric {
@@ -108,7 +118,11 @@ impl Material for Dielectric {
         let cos_theta = f32::min(-unit_direction.dot(*hit_result.normal), 1.0);
         let sin_theta = f32::sqrt(1.0 - cos_theta * cos_theta);
 
-        let direction = if sin_theta * (from_index / to_index) > 1.0 {
+        let refractive_ratio = from_index / to_index;
+        let cannot_refract = sin_theta * refractive_ratio > 1.0;
+        let direction = if cannot_refract
+            || self.reflectance(cos_theta, refractive_ratio) > random_range(0.0..=1.0)
+        {
             unit_direction.reflect(hit_result.normal)
         } else {
             unit_direction.refract(hit_result.normal, from_index, to_index)
