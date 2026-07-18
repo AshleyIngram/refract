@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{mem::take, sync::Arc};
 
 use crate::{hittable::HitResult, hittable::Hittable, interval::Interval, ray::Ray};
 
@@ -17,14 +17,14 @@ impl SceneBuilder {
         }
     }
 
-    pub fn add_object(mut self, object: impl Hittable + 'static) -> Self {
+    pub fn add_object(&mut self, object: impl Hittable + 'static) -> &mut Self {
         self.objects.push(Arc::new(object));
         self
     }
 
-    pub fn build(self) -> Scene {
+    pub fn build(&mut self) -> Scene {
         Scene {
-            objects: self.objects,
+            objects: take(&mut self.objects),
         }
     }
 }

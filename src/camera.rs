@@ -24,7 +24,7 @@ pub struct Camera {
 
 impl Camera {
     const MAX_DEPTH: i32 = 50;
-    const SAMPLES_PER_PIXEL: i32 = 100;
+    const SAMPLES_PER_PIXEL: i32 = 500;
     const PIXEL_SAMPLES_SCALE: f32 = 1.0 / Self::SAMPLES_PER_PIXEL as f32;
 
     pub fn new(

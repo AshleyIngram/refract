@@ -1,5 +1,7 @@
 use std::ops::{Add, AddAssign, Mul};
 
+use crate::rng::random_range;
+
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Color {
     pub r: f32,
@@ -10,6 +12,14 @@ pub struct Color {
 impl Color {
     pub fn new(r: f32, g: f32, b: f32) -> Self {
         Self { r, g, b }
+    }
+
+    pub fn random() -> Self {
+        Self {
+            r: random_range(0.0..1.0),
+            g: random_range(0.0..1.0),
+            b: random_range(0.0..1.0),
+        }
     }
 }
 
