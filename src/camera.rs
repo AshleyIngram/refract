@@ -1,6 +1,13 @@
 use crate::{
-    canvas::Canvas, color::Color, direction::Direction, hittable::Hittable, interval::Interval,
-    point::Point, ray::Ray, rng, scene::Scene,
+    canvas::Canvas,
+    color::Color,
+    direction::Direction,
+    hittable::Hittable,
+    interval::Interval,
+    point::Point,
+    ray::Ray,
+    rng::{self, random_range},
+    scene::Scene,
 };
 
 pub struct Camera {
@@ -10,6 +17,9 @@ pub struct Camera {
     pixel_delta_u: Direction,
     pixel_delta_v: Direction,
     origin: Point,
+    defocus_angle: f32,
+    defocus_disk_u: Direction,
+    defocus_disk_v: Direction,
 }
 
 impl Camera {
@@ -24,12 +34,13 @@ impl Camera {
         camera_center: Point,
         look_at: Point,
         camera_up_direction: Direction,
+        defocus_angle: f32,
+        focus_distance: f32,
     ) -> Self {
         let height = ((width as f64 / aspect_ratio) as i32).max(1);
-        let focal_length = (look_at - camera_center).len();
         let theta = vertical_field_of_view.to_radians();
         let h = f32::tan(theta / 2.0);
-        let viewport_height = 2.0 * h * focal_length;
+        let viewport_height = 2.0 * h * focus_distance;
         let viewport_width = viewport_height * (width as f64 / height as f64) as f32;
 
         let w = (camera_center - look_at).normalize();
@@ -43,8 +54,12 @@ impl Camera {
         let pixel_delta_v = viewport_v / (height as f32);
 
         let viewport_upper_left =
-            camera_center - focal_length * *w - viewport_u / 2.0 - viewport_v / 2.0;
+            camera_center - focus_distance * *w - viewport_u / 2.0 - viewport_v / 2.0;
         let origin = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+        let defocus_radius = focus_distance * f32::tan((defocus_angle / 2.0).to_radians());
+        let defocus_disk_u = defocus_radius * *u;
+        let defocus_disk_v = defocus_radius * *v;
 
         Self {
             width,
@@ -53,6 +68,9 @@ impl Camera {
             pixel_delta_u,
             pixel_delta_v,
             origin,
+            defocus_angle,
+            defocus_disk_u,
+            defocus_disk_v,
         }
     }
 
@@ -107,8 +125,28 @@ impl Camera {
             + ((u as f32 + u_offset) * self.pixel_delta_u)
             + ((v as f32 + v_offset) * self.pixel_delta_v);
 
-        let ray_direction = pixel_sample - self.camera_center;
+        let ray_origin = if self.defocus_angle <= 0.0 {
+            self.camera_center
+        } else {
+            self.random_point_in_unit_disk()
+        };
+        let ray_direction = pixel_sample - ray_origin;
 
-        Ray::new(self.camera_center, ray_direction)
+        Ray::new(ray_origin, ray_direction)
+    }
+
+    fn random_point_in_unit_disk(&self) -> Point {
+        let p = loop {
+            // Use direction for now, because it has a len_squared function.
+            // This could be moved to an "offset" type, but that would require lots of code duplication,
+            // and it's an implementation detail rather than part of the API.
+            let d = Direction::new(random_range(-1.0..1.0), random_range(-1.0..1.0), 0.0);
+
+            if d.len_squared() < 1.0 {
+                break Point::new(d.x, d.y, d.z);
+            }
+        };
+
+        self.camera_center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v)
     }
 }

@@ -16,6 +16,8 @@ fn main() {
     let camera_center = Point::new(-2.0, 2.0, 1.0);
     let look_at = Point::new(0.0, 0.0, -1.0);
     let camera_up_direction = Direction::new(0.0, 1.0, 0.0);
+    let defocus_angle = 10.0;
+    let focus_distance = 3.4;
 
     let camera = Camera::new(
         width,
@@ -24,6 +26,8 @@ fn main() {
         camera_center,
         look_at,
         camera_up_direction,
+        defocus_angle,
+        focus_distance,
     );
     let mut canvas = PpmCanvas::new(camera.width, camera.height);
 
