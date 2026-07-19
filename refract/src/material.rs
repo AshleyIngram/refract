@@ -2,6 +2,7 @@ use crate::{
     color::Color, direction::UnitDirection, hittable::HitResult, ray::Ray, rng::random_range,
 };
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ReflectionType {
     #[allow(
         dead_code,
