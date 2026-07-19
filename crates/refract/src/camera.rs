@@ -12,9 +12,46 @@ use crate::{
 
 use rayon::prelude::*;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RenderSettings {
+    samples_per_pixel: i32,
+    max_depth: i32,
+}
+
+impl RenderSettings {
+    pub fn new(samples_per_pixel: i32, max_depth: i32) -> Self {
+        assert!(samples_per_pixel > 0, "samples_per_pixel must be positive");
+        assert!(max_depth > 0, "max_depth must be positive");
+
+        Self {
+            samples_per_pixel,
+            max_depth,
+        }
+    }
+
+    pub fn samples_per_pixel(&self) -> i32 {
+        self.samples_per_pixel
+    }
+
+    pub fn max_depth(&self) -> i32 {
+        self.max_depth
+    }
+
+    fn pixel_samples_scale(&self) -> f32 {
+        1.0 / self.samples_per_pixel as f32
+    }
+}
+
+impl Default for RenderSettings {
+    fn default() -> Self {
+        Self::new(500, 50)
+    }
+}
+
 pub struct Camera {
     pub width: i32,
     pub height: i32,
+    settings: RenderSettings,
     camera_center: Point,
     pixel_delta_u: Direction,
     pixel_delta_v: Direction,
@@ -25,10 +62,6 @@ pub struct Camera {
 }
 
 impl Camera {
-    const MAX_DEPTH: i32 = 50;
-    const SAMPLES_PER_PIXEL: i32 = 500;
-    const PIXEL_SAMPLES_SCALE: f32 = 1.0 / Self::SAMPLES_PER_PIXEL as f32;
-
     pub fn new(
         width: i32,
         aspect_ratio: f64,
@@ -38,6 +71,7 @@ impl Camera {
         camera_up_direction: Direction,
         defocus_angle: f32,
         focus_distance: f32,
+        settings: RenderSettings,
     ) -> Self {
         let height = ((width as f64 / aspect_ratio) as i32).max(1);
         let theta = vertical_field_of_view.to_radians();
@@ -66,6 +100,7 @@ impl Camera {
         Self {
             width,
             height,
+            settings,
             camera_center,
             pixel_delta_u,
             pixel_delta_v,
@@ -111,12 +146,12 @@ impl Camera {
         let colors = pixels.par_iter().map(|(x, y)| {
             let mut color = Color::new(0.0, 0.0, 0.0);
 
-            for _sample in 0..Self::SAMPLES_PER_PIXEL {
+            for _sample in 0..self.settings.samples_per_pixel() {
                 let ray = self.get_ray(*x, *y);
-                color += self.ray_color(&ray, Self::MAX_DEPTH, scene);
+                color += self.ray_color(&ray, self.settings.max_depth(), scene);
             }
 
-            color * Self::PIXEL_SAMPLES_SCALE
+            color * self.settings.pixel_samples_scale()
         }).collect::<Vec<_>>();
 
         for i in 0..colors.len() {
@@ -156,5 +191,41 @@ impl Camera {
         };
 
         self.camera_center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn render_settings_new_zero_samples_panics() {
+        let result = std::panic::catch_unwind(|| RenderSettings::new(0, 50));
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn render_settings_new_zero_depth_panics() {
+        let result = std::panic::catch_unwind(|| RenderSettings::new(500, 0));
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn render_settings_pixel_samples_scale_is_reciprocal_of_samples() {
+        let settings = RenderSettings::new(4, 10);
+
+        let scale = settings.pixel_samples_scale();
+
+        assert_eq!(scale, 0.25);
+    }
+
+    #[test]
+    fn render_settings_default_matches_previous_constants() {
+        let settings = RenderSettings::default();
+
+        assert_eq!(settings.samples_per_pixel(), 500);
+        assert_eq!(settings.max_depth(), 50);
     }
 }

@@ -2,11 +2,8 @@ use crate::{
     color::Color, direction::UnitDirection, hittable::HitResult, ray::Ray, rng::random_range,
 };
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReflectionType {
-    #[allow(
-        dead_code,
-        reason = "Will be used by the user to select the reflection type"
-    )]
     Diffuse,
     Lambertian,
 }
