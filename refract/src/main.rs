@@ -1,9 +1,11 @@
+use std::io::stdout;
 use std::sync::Arc;
 
 use refract::camera::{Camera, RenderSettings};
-use refract::canvas::PpmCanvas;
+use refract::canvas::write_ppm;
 use refract::color::Color;
 use refract::material::{Dielectric, Material, Matte, Metal, ReflectionType};
+use refract::pixel_buffer::PixelBuffer;
 use refract::point::Point;
 use refract::rng::random_range;
 use refract::scene::SceneBuilder;
@@ -11,7 +13,7 @@ use refract::sphere::Sphere;
 
 fn main() {
     let camera = Camera::new(RenderSettings::default());
-    let mut canvas = PpmCanvas::new(camera.width, camera.height);
+    let buffer = PixelBuffer::new(camera.width as u32, camera.height as u32);
 
     let mut scene_builder = SceneBuilder::new();
 
@@ -52,7 +54,9 @@ fn main() {
     ));
 
     let scene = scene_builder.build();
-    camera.render(&scene, &mut canvas);
+    camera.render(&scene, &buffer);
+
+    write_ppm(&buffer, &mut stdout()).expect("failed to write PPM to stdout");
 }
 
 fn make_small_sphere(a: i32, b: i32) -> Sphere {

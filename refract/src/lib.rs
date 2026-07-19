@@ -5,6 +5,7 @@ pub mod direction;
 pub mod hittable;
 pub mod interval;
 pub mod material;
+pub mod pixel_buffer;
 pub mod point;
 pub mod ray;
 pub mod rng;
