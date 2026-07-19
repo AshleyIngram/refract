@@ -3,6 +3,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use refract::camera::{Camera, RenderSettings};
+use refract::canvas::PixelSink;
 use refract::direction::Direction;
 use refract::material::ReflectionType;
 use refract::pixel_buffer::PixelBuffer;
@@ -10,6 +11,11 @@ use refract::point::Point;
 use refract::scene::demo_scene;
 
 pub const ASPECT_RATIO: f64 = 16.0 / 9.0;
+
+/// Image height for a given width, matching how `Camera` derives it.
+pub fn derived_height(width: i32) -> i32 {
+    ((width as f64 / ASPECT_RATIO) as i32).max(1)
+}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RenderConfig {
@@ -103,6 +109,16 @@ impl RenderJob {
         self.buffer.is_complete()
     }
 
+    pub fn is_cancelled(&self) -> bool {
+        self.buffer.is_cancelled()
+    }
+
+    /// Whether the worker thread has exited, either by finishing every pixel
+    /// or by observing cancellation.
+    pub fn is_finished(&self) -> bool {
+        self.final_duration.get().is_some()
+    }
+
     /// Time spent rendering: still ticking while in flight, frozen once done.
     pub fn elapsed(&self) -> Duration {
         self.final_duration
@@ -120,5 +136,24 @@ impl Drop for RenderJob {
     fn drop(&mut self) {
         // The detached worker notices the flag at the next pixel and exits.
         self.cancel();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn derived_height_standard_width_matches_aspect_ratio() {
+        let height = derived_height(1200);
+
+        assert_eq!(height, 675);
+    }
+
+    #[test]
+    fn derived_height_tiny_width_clamps_to_one() {
+        let height = derived_height(1);
+
+        assert_eq!(height, 1);
     }
 }

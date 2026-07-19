@@ -5,10 +5,12 @@ use eframe::egui::{
 };
 
 use crate::render_job::{RenderConfig, RenderJob};
+use crate::settings_panel::{self, SettingsAction};
 
 const REPAINT_INTERVAL: Duration = Duration::from_millis(33);
 
 pub struct RefractApp {
+    config: RenderConfig,
     job: RenderJob,
     texture: Option<TextureHandle>,
     texture_is_final: bool,
@@ -16,10 +18,32 @@ pub struct RefractApp {
 
 impl RefractApp {
     pub fn new() -> Self {
+        let config = RenderConfig::default();
+
         Self {
-            job: RenderJob::spawn(RenderConfig::default()),
+            config,
+            job: RenderJob::spawn(config),
             texture: None,
             texture_is_final: false,
+        }
+    }
+
+    fn is_rendering(&self) -> bool {
+        !self.job.is_finished()
+    }
+
+    fn start_render(&mut self) {
+        self.job.cancel();
+        self.job = RenderJob::spawn(self.config);
+        self.texture = None;
+        self.texture_is_final = false;
+    }
+
+    fn apply_settings_action(&mut self, action: SettingsAction) {
+        match action {
+            SettingsAction::None => {}
+            SettingsAction::StartRender => self.start_render(),
+            SettingsAction::CancelRender => self.job.cancel(),
         }
     }
 
@@ -27,6 +51,9 @@ impl RefractApp {
         if self.texture_is_final {
             return;
         }
+
+        // Read before snapshotting so the final upload includes every pixel.
+        let job_finished = self.job.is_finished();
 
         let buffer = self.job.buffer();
         let size = [buffer.width() as usize, buffer.height() as usize];
@@ -39,13 +66,15 @@ impl RefractApp {
             }
         }
 
-        self.texture_is_final = self.job.is_complete();
+        self.texture_is_final = job_finished;
     }
 
     fn show_status_bar(&self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             let status = if self.job.is_complete() {
                 "Done"
+            } else if self.job.is_cancelled() {
+                "Cancelled"
             } else {
                 "Rendering..."
             };
@@ -59,7 +88,7 @@ impl RefractApp {
             ui.add(
                 ProgressBar::new(self.job.progress())
                     .show_percentage()
-                    .animate(!self.job.is_complete()),
+                    .animate(self.is_rendering()),
             );
         });
     }
@@ -82,6 +111,16 @@ impl RefractApp {
 impl eframe::App for RefractApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.refresh_texture(ui.ctx());
+
+        let is_rendering = self.is_rendering();
+        let action = egui::Panel::left("settings_panel")
+            .frame(egui::Frame::side_top_panel(ui.style()).inner_margin(12.0))
+            .default_size(280.0)
+            .show(ui, |ui| {
+                settings_panel::show(ui, &mut self.config, is_rendering)
+            })
+            .inner;
+        self.apply_settings_action(action);
 
         egui::Panel::bottom("status_bar")
             .frame(egui::Frame::side_top_panel(ui.style()).inner_margin(8.0))

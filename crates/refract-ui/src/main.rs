@@ -1,5 +1,6 @@
 mod app;
 mod render_job;
+mod settings_panel;
 
 use app::RefractApp;
 use eframe::egui;
