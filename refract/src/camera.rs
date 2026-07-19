@@ -108,16 +108,19 @@ impl Camera {
             .flat_map(|y| (0..self.width).map(move |x| (x, y)))
             .collect::<Vec<_>>();
 
-        let colors = pixels.par_iter().map(|(x, y)| {
-            let mut color = Color::new(0.0, 0.0, 0.0);
+        let colors = pixels
+            .par_iter()
+            .map(|(x, y)| {
+                let mut color = Color::new(0.0, 0.0, 0.0);
 
-            for _sample in 0..Self::SAMPLES_PER_PIXEL {
-                let ray = self.get_ray(*x, *y);
-                color += self.ray_color(&ray, Self::MAX_DEPTH, scene);
-            }
+                for _sample in 0..Self::SAMPLES_PER_PIXEL {
+                    let ray = self.get_ray(*x, *y);
+                    color += self.ray_color(&ray, Self::MAX_DEPTH, scene);
+                }
 
-            color * Self::PIXEL_SAMPLES_SCALE
-        }).collect::<Vec<_>>();
+                color * Self::PIXEL_SAMPLES_SCALE
+            })
+            .collect::<Vec<_>>();
 
         for i in 0..colors.len() {
             let y = i / self.width as usize;
