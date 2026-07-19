@@ -4,7 +4,7 @@ use crate::{
     direction::UnitDirection, interval::Interval, material::Material, point::Point, ray::Ray,
 };
 
-pub trait Hittable {
+pub trait Hittable : Send + Sync {
     fn hit(&self, ray: &Ray, interval: &Interval) -> Option<HitResult>;
 }
 

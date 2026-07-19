@@ -10,6 +10,8 @@ use crate::{
     scene::Scene,
 };
 
+use rayon::prelude::*;
+
 pub struct Camera {
     pub width: i32,
     pub height: i32,
@@ -102,19 +104,25 @@ impl Camera {
     }
 
     pub fn render(&self, scene: &Scene, canvas: &mut impl Canvas) {
-        for i in 0..self.height {
-            for j in 0..self.width {
-                let mut color = Color::new(0.0, 0.0, 0.0);
+        let pixels = (0..self.height)
+            .flat_map(|y| (0..self.width).map(move |x| (x, y)))
+            .collect::<Vec<_>>();
 
-                for _sample in 0..Self::SAMPLES_PER_PIXEL {
-                    let ray = self.get_ray(j, i);
-                    color += self.ray_color(&ray, Self::MAX_DEPTH, scene);
-                }
+        let colors = pixels.par_iter().map(|(x, y)| {
+            let mut color = Color::new(0.0, 0.0, 0.0);
 
-                canvas
-                    .set_pixel(j as u32, i as u32, color * Self::PIXEL_SAMPLES_SCALE)
-                    .unwrap();
+            for _sample in 0..Self::SAMPLES_PER_PIXEL {
+                let ray = self.get_ray(*x, *y);
+                color += self.ray_color(&ray, Self::MAX_DEPTH, scene);
             }
+
+            color * Self::PIXEL_SAMPLES_SCALE
+        }).collect::<Vec<_>>();
+
+        for i in 0..colors.len() {
+            let y = i / self.width as usize;
+            let x = i % self.width as usize;
+            let _ = canvas.set_pixel(x as u32, y as u32, colors[i]);
         }
     }
 
