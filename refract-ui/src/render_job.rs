@@ -3,6 +3,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use refract::camera::{Camera, RenderSettings};
+use refract::canvas::PixelSink;
 use refract::color::Color;
 use refract::direction::Direction;
 use refract::material::{Dielectric, Material, Matte, Metal, ReflectionType};
@@ -13,6 +14,11 @@ use refract::scene::{Scene, SceneBuilder};
 use refract::sphere::Sphere;
 
 pub const ASPECT_RATIO: f64 = 16.0 / 9.0;
+
+/// Image height for a given width, matching how `Camera` derives it.
+pub fn derived_height(width: i32) -> i32 {
+    ((width as f64 / ASPECT_RATIO) as i32).max(1)
+}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RenderConfig {
@@ -104,6 +110,16 @@ impl RenderJob {
         self.buffer.is_complete()
     }
 
+    pub fn is_cancelled(&self) -> bool {
+        self.buffer.is_cancelled()
+    }
+
+    /// Whether the worker thread has exited, either by finishing every pixel
+    /// or by observing cancellation.
+    pub fn is_finished(&self) -> bool {
+        self.final_duration.get().is_some()
+    }
+
     /// Time spent rendering: still ticking while in flight, frozen once done.
     pub fn elapsed(&self) -> Duration {
         self.final_duration
@@ -183,4 +199,23 @@ fn make_small_sphere(a: i32, b: i32) -> Sphere {
     };
 
     Sphere::new(center, 0.2, material)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn derived_height_standard_width_matches_aspect_ratio() {
+        let height = derived_height(1200);
+
+        assert_eq!(height, 675);
+    }
+
+    #[test]
+    fn derived_height_tiny_width_clamps_to_one() {
+        let height = derived_height(1);
+
+        assert_eq!(height, 1);
+    }
 }
