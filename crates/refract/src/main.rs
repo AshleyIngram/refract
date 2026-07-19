@@ -1,7 +1,10 @@
+use std::io::stdout;
+
 use refract::camera::{Camera, RenderSettings};
-use refract::canvas::PpmCanvas;
+use refract::canvas::write_ppm;
 use refract::direction::Direction;
 use refract::material::ReflectionType;
+use refract::pixel_buffer::PixelBuffer;
 use refract::point::Point;
 use refract::scene::demo_scene;
 
@@ -26,8 +29,10 @@ fn main() {
         focus_distance,
         RenderSettings::default(),
     );
-    let mut canvas = PpmCanvas::new(camera.width, camera.height);
+    let buffer = PixelBuffer::new(camera.width as u32, camera.height as u32);
 
     let scene = demo_scene(ReflectionType::Lambertian);
-    camera.render(&scene, &mut canvas);
+    camera.render(&scene, &buffer);
+
+    write_ppm(&buffer, &mut stdout()).expect("failed to write PPM to stdout");
 }

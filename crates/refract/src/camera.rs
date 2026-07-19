@@ -1,5 +1,5 @@
 use crate::{
-    canvas::Canvas,
+    canvas::PixelSink,
     color::Color,
     direction::Direction,
     hittable::Hittable,
@@ -138,27 +138,34 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, scene: &Scene, canvas: &mut impl Canvas) {
+    /// Renders the scene, delivering each pixel to the sink as it completes.
+    ///
+    /// Pixels are computed in parallel and arrive in arbitrary order. Returns
+    /// early (leaving remaining pixels untouched) if the sink reports
+    /// cancellation.
+    pub fn render(&self, scene: &Scene, sink: &impl PixelSink) {
         let pixels = (0..self.height)
             .flat_map(|y| (0..self.width).map(move |x| (x, y)))
             .collect::<Vec<_>>();
 
-        let colors = pixels.par_iter().map(|(x, y)| {
-            let mut color = Color::new(0.0, 0.0, 0.0);
-
-            for _sample in 0..self.settings.samples_per_pixel() {
-                let ray = self.get_ray(*x, *y);
-                color += self.ray_color(&ray, self.settings.max_depth(), scene);
+        pixels.par_iter().for_each(|&(x, y)| {
+            if sink.is_cancelled() {
+                return;
             }
 
-            color * self.settings.pixel_samples_scale()
-        }).collect::<Vec<_>>();
+            sink.set_pixel(x as u32, y as u32, self.render_pixel(x, y, scene));
+        });
+    }
 
-        for i in 0..colors.len() {
-            let y = i / self.width as usize;
-            let x = i % self.width as usize;
-            let _ = canvas.set_pixel(x as u32, y as u32, colors[i]);
+    fn render_pixel(&self, x: i32, y: i32, scene: &Scene) -> Color {
+        let mut color = Color::new(0.0, 0.0, 0.0);
+
+        for _sample in 0..self.settings.samples_per_pixel() {
+            let ray = self.get_ray(x, y);
+            color += self.ray_color(&ray, self.settings.max_depth(), scene);
         }
+
+        color * self.settings.pixel_samples_scale()
     }
 
     fn get_ray(&self, u: i32, v: i32) -> Ray {
@@ -196,7 +203,46 @@ impl Camera {
 
 #[cfg(test)]
 mod tests {
+    use crate::{material::ReflectionType, pixel_buffer::PixelBuffer, scene::demo_scene};
+
     use super::*;
+
+    fn tiny_camera() -> Camera {
+        Camera::new(
+            4,
+            1.0,
+            20.0,
+            Point::new(13.0, 2.0, 3.0),
+            Point::new(0.0, 0.0, 0.0),
+            Direction::new(0.0, 1.0, 0.0),
+            0.0,
+            10.0,
+            RenderSettings::new(1, 2),
+        )
+    }
+
+    #[test]
+    fn render_uncancelled_sink_completes_every_pixel() {
+        let camera = tiny_camera();
+        let scene = demo_scene(ReflectionType::Lambertian);
+        let buffer = PixelBuffer::new(camera.width as u32, camera.height as u32);
+
+        camera.render(&scene, &buffer);
+
+        assert!(buffer.is_complete());
+    }
+
+    #[test]
+    fn render_cancelled_sink_completes_no_pixels() {
+        let camera = tiny_camera();
+        let scene = demo_scene(ReflectionType::Lambertian);
+        let buffer = PixelBuffer::new(camera.width as u32, camera.height as u32);
+        buffer.cancel();
+
+        camera.render(&scene, &buffer);
+
+        assert_eq!(buffer.progress(), 0.0);
+    }
 
     #[test]
     fn render_settings_new_zero_samples_panics() {
