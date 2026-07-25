@@ -2672,6 +2672,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "refract-cli"
+version = "0.1.0"
+dependencies = [
+ "refract",
+ "refract-scenes",
+]
+
+[[package]]
 name = "refract-scenes"
 version = "0.1.0"
 dependencies = [
