@@ -1,9 +1,7 @@
 [package]
-name = "refract-ui"
+name = "refract-scenes"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 refract = { path = "../refract" }
-refract-scenes = { path = "../refract-scenes" }
-eframe = "0.35"
