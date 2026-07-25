@@ -12,9 +12,42 @@ use crate::{
 
 use rayon::prelude::*;
 
+#[derive(Debug, Clone, Copy)]
+pub struct RenderSettings {
+    pub width: i32,
+    pub aspect_ratio: f64,
+    pub vertical_field_of_view: f32,
+    pub camera_center: Point,
+    pub look_at: Point,
+    pub camera_up_direction: Direction,
+    pub defocus_angle: f32,
+    pub focus_distance: f32,
+    pub samples_per_pixel: i32,
+    pub max_depth: i32,
+}
+
+impl Default for RenderSettings {
+    fn default() -> Self {
+        Self {
+            width: 1200,
+            aspect_ratio: 16.0 / 9.0,
+            vertical_field_of_view: 20.0,
+            camera_center: Point::new(13.0, 2.0, 3.0),
+            look_at: Point::new(0.0, 0.0, 0.0),
+            camera_up_direction: Direction::new(0.0, 1.0, 0.0),
+            defocus_angle: 0.6,
+            focus_distance: 10.0,
+            samples_per_pixel: 500,
+            max_depth: 50,
+        }
+    }
+}
+
 pub struct Camera {
     pub width: i32,
     pub height: i32,
+    samples_per_pixel: i32,
+    max_depth: i32,
     camera_center: Point,
     pixel_delta_u: Direction,
     pixel_delta_v: Direction,
@@ -25,28 +58,16 @@ pub struct Camera {
 }
 
 impl Camera {
-    const MAX_DEPTH: i32 = 50;
-    const SAMPLES_PER_PIXEL: i32 = 500;
-    const PIXEL_SAMPLES_SCALE: f32 = 1.0 / Self::SAMPLES_PER_PIXEL as f32;
-
-    pub fn new(
-        width: i32,
-        aspect_ratio: f64,
-        vertical_field_of_view: f32,
-        camera_center: Point,
-        look_at: Point,
-        camera_up_direction: Direction,
-        defocus_angle: f32,
-        focus_distance: f32,
-    ) -> Self {
-        let height = ((width as f64 / aspect_ratio) as i32).max(1);
-        let theta = vertical_field_of_view.to_radians();
+    pub fn new(settings: RenderSettings) -> Self {
+        let width = settings.width;
+        let height = ((width as f64 / settings.aspect_ratio) as i32).max(1);
+        let theta = settings.vertical_field_of_view.to_radians();
         let h = f32::tan(theta / 2.0);
-        let viewport_height = 2.0 * h * focus_distance;
+        let viewport_height = 2.0 * h * settings.focus_distance;
         let viewport_width = viewport_height * (width as f64 / height as f64) as f32;
 
-        let w = (camera_center - look_at).normalize();
-        let u = camera_up_direction.cross(*w).normalize();
+        let w = (settings.camera_center - settings.look_at).normalize();
+        let u = settings.camera_up_direction.cross(*w).normalize();
         let v = w.cross(*u).normalize();
 
         let viewport_u = viewport_width * *u;
@@ -55,22 +76,27 @@ impl Camera {
         let pixel_delta_u = viewport_u / (width as f32);
         let pixel_delta_v = viewport_v / (height as f32);
 
-        let viewport_upper_left =
-            camera_center - focus_distance * *w - viewport_u / 2.0 - viewport_v / 2.0;
+        let viewport_upper_left = settings.camera_center
+            - settings.focus_distance * *w
+            - viewport_u / 2.0
+            - viewport_v / 2.0;
         let origin = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
-        let defocus_radius = focus_distance * f32::tan((defocus_angle / 2.0).to_radians());
+        let defocus_radius =
+            settings.focus_distance * f32::tan((settings.defocus_angle / 2.0).to_radians());
         let defocus_disk_u = defocus_radius * *u;
         let defocus_disk_v = defocus_radius * *v;
 
         Self {
             width,
             height,
-            camera_center,
+            samples_per_pixel: settings.samples_per_pixel,
+            max_depth: settings.max_depth,
+            camera_center: settings.camera_center,
             pixel_delta_u,
             pixel_delta_v,
             origin,
-            defocus_angle,
+            defocus_angle: settings.defocus_angle,
             defocus_disk_u,
             defocus_disk_v,
         }
@@ -108,17 +134,18 @@ impl Camera {
             .flat_map(|y| (0..self.width).map(move |x| (x, y)))
             .collect::<Vec<_>>();
 
+        let pixel_samples_scale = 1.0 / self.samples_per_pixel as f32;
         let colors = pixels
             .par_iter()
             .map(|(x, y)| {
                 let mut color = Color::new(0.0, 0.0, 0.0);
 
-                for _sample in 0..Self::SAMPLES_PER_PIXEL {
+                for _sample in 0..self.samples_per_pixel {
                     let ray = self.get_ray(*x, *y);
-                    color += self.ray_color(&ray, Self::MAX_DEPTH, scene);
+                    color += self.ray_color(&ray, self.max_depth, scene);
                 }
 
-                color * Self::PIXEL_SAMPLES_SCALE
+                color * pixel_samples_scale
             })
             .collect::<Vec<_>>();
 
