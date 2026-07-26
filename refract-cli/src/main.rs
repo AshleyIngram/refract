@@ -5,6 +5,7 @@ use std::thread;
 use std::time::Duration;
 
 use refract::camera::{Camera, RenderSettings};
+use refract::canvas::PixelSink;
 use refract::canvas::write_ppm;
 use refract::material::ReflectionType;
 use refract::pixel_buffer::PixelBuffer;
