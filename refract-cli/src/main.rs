@@ -1,6 +1,6 @@
-use std::io::{stderr, stdout, Write};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::io::{Write, stderr, stdout};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
 
@@ -11,7 +11,10 @@ use refract::material::ReflectionType;
 use refract::pixel_buffer::PixelBuffer;
 use refract_scenes::Book1Scene;
 
-fn spawn_progress_reporter(buffer: Arc<PixelBuffer>, done: Arc<AtomicBool>) -> thread::JoinHandle<()> {
+fn spawn_progress_reporter(
+    buffer: Arc<PixelBuffer>,
+    done: Arc<AtomicBool>,
+) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         let mut err = stderr();
         let mut last_percent: Option<u32> = None;
@@ -31,7 +34,11 @@ fn spawn_progress_reporter(buffer: Arc<PixelBuffer>, done: Arc<AtomicBool>) -> t
             thread::sleep(Duration::from_millis(100));
         }
 
-        let final_percent = if buffer.is_complete() { 100 } else { last_percent.unwrap_or(0) };
+        let final_percent = if buffer.is_complete() {
+            100
+        } else {
+            last_percent.unwrap_or(0)
+        };
         let _ = write!(err, "\rRendering: {final_percent:3}%\n");
         let _ = err.flush();
     })
