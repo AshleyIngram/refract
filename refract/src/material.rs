@@ -162,8 +162,11 @@ mod tests {
         ));
         let point = Point::new(0.0, 0.0, 0.0);
         let normal = Direction::new(0.0, 1.0, 0.0).normalize();
-        let incident =
-            Ray::new_at_time(Point::new(0.0, 1.0, 0.0), Direction::new(0.0, -1.0, 0.0), 0.37);
+        let incident = Ray::new_at_time(
+            Point::new(0.0, 1.0, 0.0),
+            Direction::new(0.0, -1.0, 0.0),
+            0.37,
+        );
         let hit = hit_result_at(&incident, point, normal, Arc::clone(&matte));
 
         let scatter = matte.scatter(&incident, &hit).unwrap();

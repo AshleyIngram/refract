@@ -193,16 +193,18 @@ mod tests {
         let direction = Direction::new(0.0, 0.0, -1.0);
         let interval = Interval::new(0.001, f32::INFINITY);
 
-        let hit_at_start = sphere.hit(
-            &Ray::new_at_time(Point::new(0.0, 0.0, 0.0), direction, 0.0),
-            &interval,
-        )
-        .unwrap();
-        let hit_at_end = sphere.hit(
-            &Ray::new_at_time(Point::new(0.0, 0.0, 0.0), direction, 1.0),
-            &interval,
-        )
-        .unwrap();
+        let hit_at_start = sphere
+            .hit(
+                &Ray::new_at_time(Point::new(0.0, 0.0, 0.0), direction, 0.0),
+                &interval,
+            )
+            .unwrap();
+        let hit_at_end = sphere
+            .hit(
+                &Ray::new_at_time(Point::new(0.0, 0.0, 0.0), direction, 1.0),
+                &interval,
+            )
+            .unwrap();
 
         assert_eq!(hit_at_start.t, hit_at_end.t);
         assert_eq!(hit_at_start.point, hit_at_end.point);
@@ -226,6 +228,9 @@ mod tests {
             .unwrap();
 
         assert_eq!(hit_at_half.t, (hit_at_start.t + hit_at_end.t) / 2.0);
-        assert_eq!(hit_at_half.point.z, (hit_at_start.point.z + hit_at_end.point.z) / 2.0);
+        assert_eq!(
+            hit_at_half.point.z,
+            (hit_at_start.point.z + hit_at_end.point.z) / 2.0
+        );
     }
 }
