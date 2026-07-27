@@ -284,10 +284,7 @@ mod tests {
     fn direction_inverse_correct() {
         let direction = Direction::new(2.0, 4.0, 5.0);
 
-        assert_eq!(
-            direction.inverse(),
-            Direction::new(0.5, 0.25, 0.2)
-        );
+        assert_eq!(direction.inverse(), Direction::new(0.5, 0.25, 0.2));
     }
 
     #[test]
