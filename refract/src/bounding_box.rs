@@ -29,22 +29,22 @@ impl BoundingBox {
 
     pub fn intersects(&self, ray: &Ray, interval: &Interval) -> bool {
         let origin = ray.origin;
-        let direction = ray.direction;
-        let mut ray_interval = interval.clone();
+        let inverse_direction = ray.inverse_direction;
+        let mut ray_interval = *interval;
 
-        self.intersects_axis(&self.x, origin.x, direction.x, &mut ray_interval)
-            && self.intersects_axis(&self.y, origin.y, direction.y, &mut ray_interval)
-            && self.intersects_axis(&self.z, origin.z, direction.z, &mut ray_interval)
+        self.intersects_axis(&self.x, origin.x, inverse_direction.x, &mut ray_interval)
+            && self.intersects_axis(&self.y, origin.y, inverse_direction.y, &mut ray_interval)
+            && self.intersects_axis(&self.z, origin.z, inverse_direction.z, &mut ray_interval)
     }
 
+    #[inline(always)]
     fn intersects_axis(
         &self,
         axis_interval: &Interval,
         origin: f32,
-        direction: f32,
+        inverse_direction: f32,
         ray_interval: &mut Interval,
     ) -> bool {
-        let inverse_direction = 1.0 / direction;
         let mut t0 = (axis_interval.min - origin) * inverse_direction;
         let mut t1 = (axis_interval.max - origin) * inverse_direction;
 

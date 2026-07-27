@@ -74,6 +74,10 @@ impl Direction {
 
         out_perpendicular + out_parallel
     }
+
+    pub fn inverse(&self) -> Direction {
+        Direction::new(1.0 / self.x, 1.0 / self.y, 1.0 / self.z)
+    }
 }
 
 impl UnitDirection {
@@ -275,6 +279,16 @@ impl Sub<Direction> for Direction {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn direction_inverse_correct() {
+        let direction = Direction::new(2.0, 4.0, 5.0);
+
+        assert_eq!(
+            direction.inverse(),
+            Direction::new(0.5, 0.25, 0.2)
+        );
+    }
 
     #[test]
     fn direction_div_correct() {

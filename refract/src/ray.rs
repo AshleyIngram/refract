@@ -5,6 +5,7 @@ use crate::point::Point;
 pub struct Ray {
     pub origin: Point,
     pub direction: Direction,
+    pub inverse_direction: Direction,
     pub time: f32,
 }
 
@@ -13,6 +14,7 @@ impl Ray {
         Self {
             origin,
             direction,
+            inverse_direction: direction.inverse(),
             time: 0.0,
         }
     }
@@ -21,6 +23,7 @@ impl Ray {
         Self {
             origin,
             direction,
+            inverse_direction: direction.inverse(),
             time,
         }
     }
@@ -57,5 +60,22 @@ mod tests {
         let ray = Ray::new(Point::new(1.0, 2.0, 3.0), Direction::new(4.0, 5.0, 6.0));
 
         assert_eq!(ray.time, 0.0);
+    }
+
+    #[test]
+    fn ray_new_stores_inverse_direction() {
+        let direction = Direction::new(2.0, 4.0, 5.0);
+        let ray = Ray::new(Point::new(0.0, 0.0, 0.0), direction);
+
+        assert_eq!(ray.inverse_direction, direction.inverse());
+    }
+
+    #[test]
+    fn ray_new_at_time_stores_inverse_direction() {
+        let direction = Direction::new(-1.0, 0.0, 2.0);
+        let ray = Ray::new_at_time(Point::new(0.0, 0.0, 0.0), direction, 0.5);
+
+        assert_eq!(ray.inverse_direction, direction.inverse());
+        assert_eq!(ray.time, 0.5);
     }
 }
