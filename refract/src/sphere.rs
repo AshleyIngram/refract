@@ -38,11 +38,11 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, interval: &Interval) -> Option<HitResult> {
-        let current_center = self.center.at(ray.time);
-        let direction_to_sphere = current_center - ray.origin;
+        let current_center = self.center.at(ray.time());
+        let direction_to_sphere = current_center - ray.origin();
 
-        let a = ray.direction.len_squared();
-        let h = ray.direction.dot(direction_to_sphere);
+        let a = ray.direction().len_squared();
+        let h = ray.direction().dot(direction_to_sphere);
         let c = direction_to_sphere.len_squared() - (self.radius * self.radius);
 
         let discriminant = h * h - a * c;

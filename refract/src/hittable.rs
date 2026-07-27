@@ -24,7 +24,7 @@ impl HitResult {
         outward_normal: UnitDirection,
         material: Arc<dyn Material>,
     ) -> Self {
-        let front_face = ray.direction.dot(*outward_normal) < 0.0;
+        let front_face = ray.direction().dot(*outward_normal) < 0.0;
         let normal = if front_face {
             outward_normal
         } else {

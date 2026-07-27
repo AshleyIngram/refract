@@ -28,8 +28,8 @@ impl BoundingBox {
     }
 
     pub fn intersects(&self, ray: &Ray, interval: &Interval) -> bool {
-        let origin = ray.origin;
-        let inverse_direction = ray.inverse_direction;
+        let origin = ray.origin();
+        let inverse_direction = ray.inverse_direction();
         let mut ray_interval = *interval;
 
         self.intersects_axis(&self.x, origin.x, inverse_direction.x, &mut ray_interval)

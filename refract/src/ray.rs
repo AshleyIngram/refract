@@ -1,12 +1,12 @@
 use crate::direction::Direction;
 use crate::point::Point;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ray {
-    pub origin: Point,
-    pub direction: Direction,
-    pub inverse_direction: Direction,
-    pub time: f32,
+    origin: Point,
+    direction: Direction,
+    inverse_direction: Direction,
+    time: f32,
 }
 
 impl Ray {
@@ -26,6 +26,22 @@ impl Ray {
             inverse_direction: direction.inverse(),
             time,
         }
+    }
+
+    pub fn origin(&self) -> Point {
+        self.origin
+    }
+
+    pub fn direction(&self) -> Direction {
+        self.direction
+    }
+
+    pub fn inverse_direction(&self) -> Direction {
+        self.inverse_direction
+    }
+
+    pub fn time(&self) -> f32 {
+        self.time
     }
 
     pub fn at(&self, t: f32) -> Point {
@@ -59,7 +75,7 @@ mod tests {
     fn ray_new_defaults_time_to_zero() {
         let ray = Ray::new(Point::new(1.0, 2.0, 3.0), Direction::new(4.0, 5.0, 6.0));
 
-        assert_eq!(ray.time, 0.0);
+        assert_eq!(ray.time(), 0.0);
     }
 
     #[test]
@@ -67,7 +83,7 @@ mod tests {
         let direction = Direction::new(2.0, 4.0, 5.0);
         let ray = Ray::new(Point::new(0.0, 0.0, 0.0), direction);
 
-        assert_eq!(ray.inverse_direction, direction.inverse());
+        assert_eq!(ray.inverse_direction(), direction.inverse());
     }
 
     #[test]
@@ -75,7 +91,7 @@ mod tests {
         let direction = Direction::new(-1.0, 0.0, 2.0);
         let ray = Ray::new_at_time(Point::new(0.0, 0.0, 0.0), direction, 0.5);
 
-        assert_eq!(ray.inverse_direction, direction.inverse());
-        assert_eq!(ray.time, 0.5);
+        assert_eq!(ray.inverse_direction(), direction.inverse());
+        assert_eq!(ray.time(), 0.5);
     }
 }

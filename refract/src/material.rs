@@ -48,7 +48,7 @@ impl Material for Matte {
         } else {
             direction
         };
-        let scattered = Ray::new_at_time(hit_result.point, scatter_direction, ray.time);
+        let scattered = Ray::new_at_time(hit_result.point, scatter_direction, ray.time());
 
         Some(ScatterResult {
             attenuation: self.albedo,
@@ -73,11 +73,11 @@ impl Metal {
 
 impl Material for Metal {
     fn scatter(&self, ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
-        let reflected = (*ray.direction.reflect(hit_result.normal).normalize())
+        let reflected = (*ray.direction().reflect(hit_result.normal).normalize())
             + (self.fuzz * *UnitDirection::random_unit_direction());
-        let scattered = Ray::new_at_time(hit_result.point, reflected, ray.time);
+        let scattered = Ray::new_at_time(hit_result.point, reflected, ray.time());
 
-        if scattered.direction.dot(*hit_result.normal) > 0.0 {
+        if scattered.direction().dot(*hit_result.normal) > 0.0 {
             Some(ScatterResult {
                 attenuation: self.albedo,
                 scattered,
@@ -115,7 +115,7 @@ impl Material for Dielectric {
             (self.refractive_index, 1.0)
         };
 
-        let unit_direction = *ray.direction.normalize();
+        let unit_direction = *ray.direction().normalize();
         let cos_theta = f32::min(-unit_direction.dot(*hit_result.normal), 1.0);
         let sin_theta = f32::sqrt(1.0 - cos_theta * cos_theta);
 
@@ -131,7 +131,7 @@ impl Material for Dielectric {
 
         Some(ScatterResult {
             attenuation,
-            scattered: Ray::new_at_time(hit_result.point, direction, ray.time),
+            scattered: Ray::new_at_time(hit_result.point, direction, ray.time()),
         })
     }
 }
@@ -171,7 +171,7 @@ mod tests {
 
         let scatter = matte.scatter(&incident, &hit).unwrap();
 
-        assert_eq!(scatter.scattered.time, 0.37);
+        assert_eq!(scatter.scattered.time(), 0.37);
     }
 
     #[test]
@@ -201,7 +201,7 @@ mod tests {
 
         let scatter = matte.scatter(&incident, &hit).unwrap();
 
-        assert_eq!(scatter.scattered.origin, point);
+        assert_eq!(scatter.scattered.origin(), point);
     }
 
     #[test]
@@ -220,7 +220,7 @@ mod tests {
         crate::rng::reseed(99);
         let second = matte.scatter(&incident, &hit).unwrap();
 
-        assert_eq!(first.scattered.direction, second.scattered.direction);
+        assert_eq!(first.scattered.direction(), second.scattered.direction());
     }
 
     #[test]
@@ -235,8 +235,8 @@ mod tests {
         let scatter = metal.scatter(&incident, &hit).unwrap();
 
         assert_eq!(scatter.attenuation, albedo);
-        assert_eq!(scatter.scattered.origin, point);
-        assert_eq!(scatter.scattered.direction, Direction::new(0.0, 1.0, 0.0));
+        assert_eq!(scatter.scattered.origin(), point);
+        assert_eq!(scatter.scattered.direction(), Direction::new(0.0, 1.0, 0.0));
     }
 
     #[test]
@@ -250,7 +250,7 @@ mod tests {
         let scatter = metal.scatter(&incident, &hit).unwrap();
 
         assert_eq!(
-            scatter.scattered.direction,
+            scatter.scattered.direction(),
             *Direction::new(1.0, 1.0, 0.0).normalize()
         );
     }

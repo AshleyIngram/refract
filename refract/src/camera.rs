@@ -112,7 +112,7 @@ impl Camera {
 
         match hit_result {
             None => {
-                let unit_direction = ray.direction.normalize();
+                let unit_direction = ray.direction().normalize();
                 let a = 0.5 * (unit_direction.y + 1.0);
                 (1.0 - a) * Color::new(1.0, 1.0, 1.0) + (a * Color::new(0.5, 0.7, 1.0))
             }
