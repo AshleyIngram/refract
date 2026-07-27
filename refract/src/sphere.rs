@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::direction::Direction;
 use crate::hittable::{HitResult, Hittable};
 use crate::interval::Interval;
 use crate::material::Material;
@@ -7,15 +8,28 @@ use crate::point::Point;
 use crate::ray::Ray;
 
 pub struct Sphere {
-    pub center: Point,
-    pub radius: f32,
-    pub material: Arc<dyn Material>,
+    center: Ray,
+    radius: f32,
+    material: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point, radius: f32, material: Arc<dyn Material>) -> Self {
+    pub fn new_stationary(center: Point, radius: f32, material: Arc<dyn Material>) -> Self {
         Self {
-            center,
+            center: Ray::new(center, Direction::new(0.0, 0.0, 0.0)),
+            radius,
+            material,
+        }
+    }
+
+    pub fn new_moving(
+        from_center: Point,
+        to_center: Point,
+        radius: f32,
+        material: Arc<dyn Material>,
+    ) -> Self {
+        Self {
+            center: Ray::new(from_center, to_center - from_center),
             radius,
             material,
         }
@@ -24,7 +38,8 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, interval: &Interval) -> Option<HitResult> {
-        let direction_to_sphere = self.center - ray.origin;
+        let current_center = self.center.at(ray.time);
+        let direction_to_sphere = current_center - ray.origin;
 
         let a = ray.direction.len_squared();
         let h = ray.direction.dot(direction_to_sphere);
@@ -54,7 +69,7 @@ impl Hittable for Sphere {
 
         root.map(|t| {
             let point = ray.at(t);
-            let normal = ((point - self.center) / self.radius).normalize();
+            let normal = ((point - current_center) / self.radius).normalize();
             HitResult::new(ray, point, t, normal, Arc::clone(&self.material))
         })
     }
@@ -72,7 +87,7 @@ mod tests {
 
     #[test]
     fn sphere_hit_from_outside_first_intersection() {
-        let sphere = Sphere::new(
+        let sphere = Sphere::new_stationary(
             Point::new(0.0, 0.0, -1.0),
             0.5,
             Arc::new(Matte::new(
@@ -95,7 +110,7 @@ mod tests {
 
     #[test]
     fn sphere_hit_from_inside_second_intersection() {
-        let sphere = Sphere::new(
+        let sphere = Sphere::new_stationary(
             Point::new(0.0, 0.0, -1.0),
             0.5,
             Arc::new(Matte::new(
@@ -118,7 +133,7 @@ mod tests {
 
     #[test]
     fn sphere_hit_misses_none() {
-        let sphere = Sphere::new(
+        let sphere = Sphere::new_stationary(
             Point::new(0.0, 0.0, -1.0),
             0.5,
             Arc::new(Matte::new(
@@ -132,5 +147,85 @@ mod tests {
         let hit_result = sphere.hit(&ray, &interval);
 
         assert!(hit_result.is_none());
+    }
+
+    fn moving_sphere_along_z() -> Sphere {
+        Sphere::new_moving(
+            Point::new(0.0, 0.0, -1.0),
+            Point::new(0.0, 0.0, -3.0),
+            0.5,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        )
+    }
+
+    #[test]
+    fn moving_sphere_hit_depends_on_ray_time() {
+        let sphere = moving_sphere_along_z();
+        let direction = Direction::new(0.0, 0.0, -1.0);
+        let interval = Interval::new(0.001, f32::INFINITY);
+
+        let hit_at_start = sphere.hit(
+            &Ray::new_at_time(Point::new(0.0, 0.0, 0.0), direction, 0.0),
+            &interval,
+        );
+        let hit_at_end = sphere.hit(
+            &Ray::new_at_time(Point::new(0.0, 0.0, 0.0), direction, 1.0),
+            &interval,
+        );
+
+        assert_eq!(hit_at_start.unwrap().t, 0.5);
+        assert_eq!(hit_at_end.unwrap().t, 2.5);
+    }
+
+    #[test]
+    fn stationary_sphere_hit_is_unchanged_across_ray_times() {
+        let sphere = Sphere::new_stationary(
+            Point::new(0.0, 0.0, -1.0),
+            0.5,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        );
+        let direction = Direction::new(0.0, 0.0, -1.0);
+        let interval = Interval::new(0.001, f32::INFINITY);
+
+        let hit_at_start = sphere.hit(
+            &Ray::new_at_time(Point::new(0.0, 0.0, 0.0), direction, 0.0),
+            &interval,
+        )
+        .unwrap();
+        let hit_at_end = sphere.hit(
+            &Ray::new_at_time(Point::new(0.0, 0.0, 0.0), direction, 1.0),
+            &interval,
+        )
+        .unwrap();
+
+        assert_eq!(hit_at_start.t, hit_at_end.t);
+        assert_eq!(hit_at_start.point, hit_at_end.point);
+    }
+
+    #[test]
+    fn moving_sphere_hit_at_half_time_is_midpoint() {
+        let sphere = moving_sphere_along_z();
+        let direction = Direction::new(0.0, 0.0, -1.0);
+        let interval = Interval::new(0.001, f32::INFINITY);
+        let origin = Point::new(0.0, 0.0, 0.0);
+
+        let hit_at_start = sphere
+            .hit(&Ray::new_at_time(origin, direction, 0.0), &interval)
+            .unwrap();
+        let hit_at_half = sphere
+            .hit(&Ray::new_at_time(origin, direction, 0.5), &interval)
+            .unwrap();
+        let hit_at_end = sphere
+            .hit(&Ray::new_at_time(origin, direction, 1.0), &interval)
+            .unwrap();
+
+        assert_eq!(hit_at_half.t, (hit_at_start.t + hit_at_end.t) / 2.0);
+        assert_eq!(hit_at_half.point.z, (hit_at_start.point.z + hit_at_end.point.z) / 2.0);
     }
 }

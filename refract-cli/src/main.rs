@@ -9,7 +9,7 @@ use refract::canvas::PixelSink;
 use refract::canvas::write_ppm;
 use refract::material::ReflectionType;
 use refract::pixel_buffer::PixelBuffer;
-use refract_scenes::Book1Scene;
+use refract_scenes::DemoScene;
 
 fn spawn_progress_reporter(
     buffer: Arc<PixelBuffer>,
@@ -50,7 +50,7 @@ fn main() {
         ..RenderSettings::default()
     });
     let buffer = Arc::new(PixelBuffer::new(camera.width as u32, camera.height as u32));
-    let scene = Book1Scene::build(ReflectionType::Lambertian);
+    let scene = DemoScene::build(ReflectionType::Lambertian);
 
     let done = Arc::new(AtomicBool::new(false));
     let reporter = spawn_progress_reporter(Arc::clone(&buffer), Arc::clone(&done));

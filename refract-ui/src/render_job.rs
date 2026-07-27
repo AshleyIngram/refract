@@ -9,7 +9,7 @@ use refract::material::ReflectionType;
 use refract::pixel_buffer::PixelBuffer;
 use refract::point::Point;
 
-use refract_scenes::Book1Scene;
+use refract_scenes::DemoScene;
 
 pub const ASPECT_RATIO: f64 = 16.0 / 9.0;
 
@@ -84,7 +84,7 @@ impl RenderJob {
         let worker_buffer = Arc::clone(&buffer);
         let worker_duration = Arc::clone(&final_duration);
         thread::spawn(move || {
-            let scene = Book1Scene::build(config.reflection_type);
+            let scene = DemoScene::build(config.reflection_type);
             camera.render(&scene, worker_buffer.as_ref());
             let _ = worker_duration.set(started_at.elapsed());
         });

@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use refract::{
     color::Color,
+    direction::Direction,
     material::{Dielectric, Material, Matte, Metal, ReflectionType},
     point::Point,
     rng::random_range,
@@ -9,9 +10,9 @@ use refract::{
     sphere::Sphere,
 };
 
-pub struct Book1Scene;
+pub struct DemoScene;
 
-impl Book1Scene {
+impl DemoScene {
     pub fn build(reflection_type: ReflectionType) -> Scene {
         let mut scene_builder = SceneBuilder::new();
 
@@ -62,7 +63,8 @@ fn make_small_sphere(a: i32, b: i32, reflection_type: ReflectionType) -> Option<
         return None;
     }
 
-    let material: Arc<dyn Material> = match random_range(0.0..1.0) {
+    let random_number = random_range(0.0..1.0);
+    let material: Arc<dyn Material> = match random_number {
         m if m < 0.8 => {
             let albedo = Color::random() * Color::random();
             Arc::new(Matte::new(albedo, reflection_type))
@@ -75,5 +77,10 @@ fn make_small_sphere(a: i32, b: i32, reflection_type: ReflectionType) -> Option<
         _ => Arc::new(Dielectric::new(1.5)),
     };
 
-    Some(Sphere::new_stationary(center, 0.2, material))
+    if random_number < 0.8 {
+        let center_to = center + Direction::new(0.0, random_range(0.0..0.5), 0.0);
+        Some(Sphere::new_moving(center, center_to, 0.2, material))
+    } else {
+        Some(Sphere::new_stationary(center, 0.2, material))
+    }
 }

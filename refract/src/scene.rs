@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     fn scene_hit_multiple_returns_closest() {
-        let near = Sphere::new(
+        let near = Sphere::new_stationary(
             Point::new(0.0, 0.0, -1.0),
             0.5,
             Arc::new(Matte::new(
@@ -81,7 +81,7 @@ mod tests {
                 ReflectionType::Diffuse,
             )),
         );
-        let far = Sphere::new(
+        let far = Sphere::new_stationary(
             Point::new(0.0, 0.0, -3.0),
             0.5,
             Arc::new(Matte::new(
@@ -103,7 +103,7 @@ mod tests {
 
     #[test]
     fn scene_hit_two_spheres_misses_returns_none() {
-        let near = Sphere::new(
+        let near = Sphere::new_stationary(
             Point::new(0.0, 0.0, -1.0),
             0.5,
             Arc::new(Matte::new(
@@ -111,7 +111,7 @@ mod tests {
                 ReflectionType::Diffuse,
             )),
         );
-        let far = Sphere::new(
+        let far = Sphere::new_stationary(
             Point::new(0.0, 0.0, -3.0),
             0.5,
             Arc::new(Matte::new(

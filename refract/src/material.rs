@@ -36,7 +36,7 @@ impl Matte {
 }
 
 impl Material for Matte {
-    fn scatter(&self, _ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
+    fn scatter(&self, ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
         let direction = match self.reflection_type {
             ReflectionType::Diffuse => *hit_result.normal + *UnitDirection::random_unit_direction(),
             ReflectionType::Lambertian => {
@@ -48,7 +48,7 @@ impl Material for Matte {
         } else {
             direction
         };
-        let scattered = Ray::new(hit_result.point, scatter_direction);
+        let scattered = Ray::new_at_time(hit_result.point, scatter_direction, ray.time);
 
         Some(ScatterResult {
             attenuation: self.albedo,
@@ -75,7 +75,7 @@ impl Material for Metal {
     fn scatter(&self, ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
         let reflected = (*ray.direction.reflect(hit_result.normal).normalize())
             + (self.fuzz * *UnitDirection::random_unit_direction());
-        let scattered = Ray::new(hit_result.point, reflected);
+        let scattered = Ray::new_at_time(hit_result.point, reflected, ray.time);
 
         if scattered.direction.dot(*hit_result.normal) > 0.0 {
             Some(ScatterResult {
@@ -131,7 +131,7 @@ impl Material for Dielectric {
 
         Some(ScatterResult {
             attenuation,
-            scattered: Ray::new(hit_result.point, direction),
+            scattered: Ray::new_at_time(hit_result.point, direction, ray.time),
         })
     }
 }
@@ -151,6 +151,24 @@ mod tests {
         material: Arc<dyn Material>,
     ) -> HitResult {
         HitResult::new(incident, point, 1.0, outward_normal, material)
+    }
+
+    #[test]
+    fn scatter_preserves_incident_ray_time() {
+        crate::rng::reseed(42);
+        let matte: Arc<dyn Material> = Arc::new(Matte::new(
+            Color::new(1.0, 1.0, 1.0),
+            ReflectionType::Lambertian,
+        ));
+        let point = Point::new(0.0, 0.0, 0.0);
+        let normal = Direction::new(0.0, 1.0, 0.0).normalize();
+        let incident =
+            Ray::new_at_time(Point::new(0.0, 1.0, 0.0), Direction::new(0.0, -1.0, 0.0), 0.37);
+        let hit = hit_result_at(&incident, point, normal, Arc::clone(&matte));
+
+        let scatter = matte.scatter(&incident, &hit).unwrap();
+
+        assert_eq!(scatter.scattered.time, 0.37);
     }
 
     #[test]
