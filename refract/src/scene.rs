@@ -1,30 +1,43 @@
 use std::{mem::take, sync::Arc};
 
-use crate::{hittable::HitResult, hittable::Hittable, interval::Interval, ray::Ray};
+use crate::{
+    bounding_box::BoundingBox,
+    hittable::{HitResult, Hittable},
+    interval::Interval,
+    ray::Ray,
+};
 
 pub struct Scene {
     objects: Vec<Arc<dyn Hittable>>,
+    bounding_box: BoundingBox,
 }
 
 pub struct SceneBuilder {
     objects: Vec<Arc<dyn Hittable>>,
+    bounding_box: BoundingBox,
 }
 
 impl SceneBuilder {
     pub fn new() -> Self {
         Self {
             objects: Vec::new(),
+            bounding_box: BoundingBox::empty(),
         }
     }
 
     pub fn add_object(&mut self, object: impl Hittable + 'static) -> &mut Self {
+        let object_bounding_box = object.bounding_box();
         self.objects.push(Arc::new(object));
+
+        self.bounding_box =
+            BoundingBox::new_from_bounding_boxes(&self.bounding_box, &object_bounding_box);
         self
     }
 
     pub fn build(&mut self) -> Scene {
         Scene {
             objects: take(&mut self.objects),
+            bounding_box: self.bounding_box,
         }
     }
 }
@@ -45,6 +58,10 @@ impl Hittable for Scene {
         }
 
         hit_record
+    }
+
+    fn bounding_box(&self) -> BoundingBox {
+        self.bounding_box
     }
 }
 
@@ -126,5 +143,28 @@ mod tests {
         let hit_result_option = scene.hit(&ray, &interval);
 
         assert!(hit_result_option.is_none());
+    }
+
+    #[test]
+    fn scene_bounding_box_unions_object_boxes() {
+        let near = Sphere::new_stationary(
+            Point::new(0.0, 0.0, -1.0),
+            0.5,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        );
+        let far = Sphere::new_stationary(
+            Point::new(0.0, 0.0, -3.0),
+            0.5,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        );
+        let scene = SceneBuilder::new().add_object(near).add_object(far).build();
+
+        assert_eq!(scene.bounding_box(), BoundingBox::new(Point::new(-0.5, -0.5, -3.5), Point::new(0.5, 0.5, -0.5)));
     }
 }

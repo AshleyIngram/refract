@@ -1,9 +1,10 @@
 use crate::{interval::Interval, point::Point, ray::Ray};
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct BoundingBox {
-    x: Interval,
-    y: Interval,
-    z: Interval,
+    pub(crate) x: Interval,
+    pub(crate) y: Interval,
+    pub(crate) z: Interval,
 }
 
 impl BoundingBox {
@@ -24,6 +25,21 @@ impl BoundingBox {
             Interval::new(b.z, a.z)
         };
 
+        Self { x, y, z }
+    }
+
+    pub fn empty() -> Self {
+        Self {
+            x: Interval::new(f32::INFINITY, f32::NEG_INFINITY),
+            y: Interval::new(f32::INFINITY, f32::NEG_INFINITY),
+            z: Interval::new(f32::INFINITY, f32::NEG_INFINITY),
+        }
+    }
+
+    pub fn new_from_bounding_boxes(a: &BoundingBox, b: &BoundingBox) -> Self {
+        let x = Interval::new_from_intervals(&a.x, &b.x);
+        let y = Interval::new_from_intervals(&a.y, &b.y);
+        let z = Interval::new_from_intervals(&a.z, &b.z);
         Self { x, y, z }
     }
 
@@ -78,6 +94,23 @@ mod tests {
 
     fn open_interval() -> Interval {
         Interval::new(0.001, f32::INFINITY)
+    }
+
+    #[test]
+    fn empty_box_empty_on_all_axis() {
+        let bbox = BoundingBox::empty();
+
+        assert!(bbox.x.max < bbox.x.min);
+        assert!(bbox.y.max < bbox.y.min);
+        assert!(bbox.z.max < bbox.z.min);
+    }
+
+    #[test]
+    fn merge_with_empty_returns_other_box() {
+        let box1 = BoundingBox::empty();
+        let box2 = BoundingBox::new(Point::new(0.0, 0.0, 0.0), Point::new(1.0, 1.0, 1.0));
+
+        assert_eq!(BoundingBox::new_from_bounding_boxes(&box1, &box2), box2);
     }
 
     #[test]

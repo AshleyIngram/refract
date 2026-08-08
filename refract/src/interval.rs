@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Interval {
     pub min: f32,
     pub max: f32,
@@ -7,6 +7,13 @@ pub struct Interval {
 impl Interval {
     pub fn new(min: f32, max: f32) -> Self {
         Self { min, max }
+    }
+
+    pub fn new_from_intervals(a: &Interval, b: &Interval) -> Self {
+        Self {
+            min: a.min.min(b.min),
+            max: a.max.max(b.max),
+        }
     }
 
     pub fn contains(&self, x: f32) -> bool {

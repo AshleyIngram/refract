@@ -1,11 +1,14 @@
 use std::sync::Arc;
 
 use crate::{
-    direction::UnitDirection, interval::Interval, material::Material, point::Point, ray::Ray,
+    bounding_box::BoundingBox, direction::UnitDirection, interval::Interval, material::Material,
+    point::Point, ray::Ray,
 };
 
 pub trait Hittable: Send + Sync {
     fn hit(&self, ray: &Ray, interval: &Interval) -> Option<HitResult>;
+
+    fn bounding_box(&self) -> BoundingBox;
 }
 
 pub struct HitResult {

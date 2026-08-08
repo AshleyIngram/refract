@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::bounding_box::BoundingBox;
 use crate::direction::Direction;
 use crate::hittable::{HitResult, Hittable};
 use crate::interval::Interval;
@@ -11,14 +12,18 @@ pub struct Sphere {
     center: Ray,
     radius: f32,
     material: Arc<dyn Material>,
+    bounding_box: BoundingBox,
 }
 
 impl Sphere {
     pub fn new_stationary(center: Point, radius: f32, material: Arc<dyn Material>) -> Self {
+        let radius_vector = Direction::new(radius, radius, radius);
+        let bounding_box = BoundingBox::new(center - radius_vector, center + radius_vector);
         Self {
             center: Ray::new(center, Direction::new(0.0, 0.0, 0.0)),
             radius,
             material,
+            bounding_box,
         }
     }
 
@@ -28,10 +33,22 @@ impl Sphere {
         radius: f32,
         material: Arc<dyn Material>,
     ) -> Self {
+        let center = Ray::new(from_center, to_center - from_center);
+        let radius_vector = Direction::new(radius, radius, radius);
+        let bounding_box_1 = BoundingBox::new(
+            center.at(0.0) - radius_vector,
+            center.at(0.0) + radius_vector,
+        );
+        let bounding_box_2 = BoundingBox::new(
+            center.at(1.0) - radius_vector,
+            center.at(1.0) + radius_vector,
+        );
+        let bounding_box = BoundingBox::new_from_bounding_boxes(&bounding_box_1, &bounding_box_2);
         Self {
-            center: Ray::new(from_center, to_center - from_center),
+            center,
             radius,
             material,
+            bounding_box,
         }
     }
 }
@@ -73,6 +90,10 @@ impl Hittable for Sphere {
             HitResult::new(ray, point, t, normal, Arc::clone(&self.material))
         })
     }
+
+    fn bounding_box(&self) -> BoundingBox {
+        self.bounding_box
+    }
 }
 
 #[cfg(test)]
@@ -84,6 +105,18 @@ mod tests {
     };
 
     use super::*;
+
+    fn moving_sphere_along_z() -> Sphere {
+        Sphere::new_moving(
+            Point::new(0.0, 0.0, -1.0),
+            Point::new(0.0, 0.0, -3.0),
+            0.5,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        )
+    }
 
     #[test]
     fn sphere_hit_from_outside_first_intersection() {
@@ -147,18 +180,6 @@ mod tests {
         let hit_result = sphere.hit(&ray, &interval);
 
         assert!(hit_result.is_none());
-    }
-
-    fn moving_sphere_along_z() -> Sphere {
-        Sphere::new_moving(
-            Point::new(0.0, 0.0, -1.0),
-            Point::new(0.0, 0.0, -3.0),
-            0.5,
-            Arc::new(Matte::new(
-                Color::new(1.0, 1.0, 1.0),
-                ReflectionType::Diffuse,
-            )),
-        )
     }
 
     #[test]
@@ -232,5 +253,26 @@ mod tests {
             hit_at_half.point.z,
             (hit_at_start.point.z + hit_at_end.point.z) / 2.0
         );
+    }
+
+    #[test]
+    fn stationary_sphere_bounding_box_is_correct() {
+        let sphere = Sphere::new_stationary(
+            Point::new(0.0, 0.0, -1.0),
+            0.5,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        );
+
+        assert_eq!(sphere.bounding_box(), BoundingBox::new(Point::new(-0.5, -0.5, -1.5), Point::new(0.5, 0.5, -0.5)));
+    }
+
+    #[test]
+    fn moving_sphere_bounding_box_is_correct() {
+        let sphere = moving_sphere_along_z();
+
+        assert_eq!(sphere.bounding_box(), BoundingBox::new(Point::new(-0.5, -0.5, -3.5), Point::new(0.5, 0.5, -0.5)));
     }
 }
