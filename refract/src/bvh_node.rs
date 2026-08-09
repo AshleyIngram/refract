@@ -5,7 +5,6 @@ use crate::{
     hittable::{HitResult, Hittable},
     interval::Interval,
     ray::Ray,
-    rng::random_range,
 };
 
 pub struct BvhNode {
@@ -24,37 +23,53 @@ impl BvhNode {
 
         let span = end - start;
 
-        if span == 1 {
-            Arc::new(Self {
+        match span {
+            1 => Arc::new(Self {
                 left: objects[start].clone(),
                 right: objects[start].clone(),
                 bounding_box: objects[start].bounding_box(),
-            })
-        } else if span == 2 {
-            Arc::new(Self {
+            }),
+            2 => Arc::new(Self {
                 left: objects[start].clone(),
                 right: objects[start + 1].clone(),
                 bounding_box: BoundingBox::new_from_bounding_boxes(
                     &objects[start].bounding_box(),
                     &objects[start + 1].bounding_box(),
                 ),
-            })
-        } else {
-            let axis = random_range(0..3);
-            objects[start..end].sort_by(|a, b| Self::box_compare(a, b, axis));
-            let mid = start + span / 2;
+            }),
+            _ => {
+                let bbox = objects[start..end]
+                    .iter()
+                    .fold(BoundingBox::empty(), |acc, object| {
+                        BoundingBox::new_from_bounding_boxes(&acc, &object.bounding_box())
+                    });
+                let axis = Self::longest_axis(&bbox);
+                objects[start..end].sort_by(|a, b| Self::box_compare(a, b, axis));
+                let mid = start + span / 2;
 
-            let left = Self::new_with_span(objects, start, mid);
-            let right = Self::new_with_span(objects, mid, end);
-            let bounding_box =
-                BoundingBox::new_from_bounding_boxes(&left.bounding_box(), &right.bounding_box());
+                let left = Self::new_with_span(objects, start, mid);
+                let right = Self::new_with_span(objects, mid, end);
+                let bounding_box = BoundingBox::new_from_bounding_boxes(
+                    &left.bounding_box(),
+                    &right.bounding_box(),
+                );
 
-            Arc::new(Self {
-                left: left,
-                right: right,
-                bounding_box,
-            })
+                Arc::new(Self {
+                    left: left,
+                    right: right,
+                    bounding_box,
+                })
+            }
         }
+    }
+
+    fn longest_axis(bbox: &BoundingBox) -> usize {
+        [bbox.x.size(), bbox.y.size(), bbox.z.size()]
+            .iter()
+            .enumerate()
+            .max_by(|(_k1, v1), (_k2, v2)| v1.partial_cmp(v2).unwrap())
+            .unwrap()
+            .0
     }
 
     fn box_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis_index: usize) -> Ordering {
@@ -109,14 +124,7 @@ mod tests {
 
     #[test]
     fn new_single_object_is_the_root() {
-        let object: Arc<dyn Hittable> = Arc::new(Sphere::new_stationary(
-            Point::new(0.0, 0.0, 0.0),
-            1.0,
-            Arc::new(Matte::new(
-                Color::new(1.0, 1.0, 1.0),
-                ReflectionType::Diffuse,
-            )),
-        ));
+        let object: Arc<dyn Hittable> = sphere_at(0.0, 0.0, 0.0, 1.0);
         let sphere_bbox = object.bounding_box();
 
         let bvh_node = BvhNode::new(&mut [object.clone()]);
@@ -127,28 +135,29 @@ mod tests {
     }
 
     #[test]
+    fn new_three_objects_correct_tree_construction() {
+        let sphere1 = sphere_at(-4.0, 0.0, 0.0, 1.0);
+        let sphere2 = sphere_at(0.0, 0.0, 0.0, 1.0);
+        let sphere3 = sphere_at(4.0, 0.0, 0.0, 1.0);
+
+        let bvh_node = BvhNode::new(&mut [sphere1.clone(), sphere2.clone(), sphere3.clone()]);
+
+        assert_eq!(bvh_node.left.bounding_box(), sphere1.bounding_box());
+        assert_eq!(
+            bvh_node.right.bounding_box(),
+            BoundingBox::new_from_bounding_boxes(&sphere2.bounding_box(), &sphere3.bounding_box())
+        );
+    }
+
+    #[test]
     fn hit_returns_closest_object() {
-        let near = Arc::new(Sphere::new_stationary(
-            Point::new(0.0, 0.0, -1.0),
-            0.5,
-            Arc::new(Matte::new(
-                Color::new(1.0, 1.0, 1.0),
-                ReflectionType::Diffuse,
-            )),
-        ));
-        let far = Arc::new(Sphere::new_stationary(
-            Point::new(0.0, 0.0, -3.0),
-            0.5,
-            Arc::new(Matte::new(
-                Color::new(1.0, 1.0, 1.0),
-                ReflectionType::Diffuse,
-            )),
-        ));
-        let scene = BvhNode::new(&mut [near, far]);
+        let near = sphere_at(0.0, 0.0, -1.0, 0.5);
+        let far = sphere_at(0.0, 0.0, -3.0, 0.5);
+        let bvh_node = BvhNode::new(&mut [near, far]);
         let ray = Ray::new(Point::new(0.0, 0.0, 0.0), Direction::new(0.0, 0.0, -1.0));
         let interval = Interval::new(0.0, f32::INFINITY);
 
-        let hit_result_option = scene.hit(&ray, &interval);
+        let hit_result_option = bvh_node.hit(&ray, &interval);
 
         assert!(hit_result_option.is_some());
         let hit_result = hit_result_option.unwrap();
@@ -158,28 +167,25 @@ mod tests {
 
     #[test]
     fn hit_misses_everything_none() {
-        let near = Arc::new(Sphere::new_stationary(
-            Point::new(0.0, 0.0, -1.0),
-            0.5,
-            Arc::new(Matte::new(
-                Color::new(1.0, 1.0, 1.0),
-                ReflectionType::Diffuse,
-            )),
-        ));
-        let far = Arc::new(Sphere::new_stationary(
-            Point::new(0.0, 0.0, -3.0),
-            0.5,
-            Arc::new(Matte::new(
-                Color::new(1.0, 1.0, 1.0),
-                ReflectionType::Diffuse,
-            )),
-        ));
-        let scene = BvhNode::new(&mut [near, far]);
+        let near = sphere_at(0.0, 0.0, -1.0, 0.5);
+        let far = sphere_at(0.0, 0.0, -3.0, 0.5);
+        let bvh_node = BvhNode::new(&mut [near, far]);
         let ray = Ray::new(Point::new(0.0, 0.0, 0.0), Direction::new(0.0, 0.0, 1.0));
         let interval = Interval::new(0.0, f32::INFINITY);
 
-        let hit_result_option = scene.hit(&ray, &interval);
+        let hit_result_option = bvh_node.hit(&ray, &interval);
 
         assert!(hit_result_option.is_none());
+    }
+
+    fn sphere_at(x: f32, y: f32, z: f32, radius: f32) -> Arc<dyn Hittable> {
+        Arc::new(Sphere::new_stationary(
+            Point::new(x, y, z),
+            radius,
+            Arc::new(Matte::new(
+                Color::new(1.0, 1.0, 1.0),
+                ReflectionType::Diffuse,
+            )),
+        ))
     }
 }

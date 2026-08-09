@@ -38,6 +38,10 @@ impl Interval {
         let padding = delta / 2.0;
         Self::new(self.min - padding, self.max + padding)
     }
+
+    pub fn size(&self) -> f32 {
+        self.max - self.min
+    }
 }
 
 #[cfg(test)]
@@ -69,5 +73,12 @@ mod tests {
         assert_eq!(interval.clamp(0.5), 1.0);
         assert_eq!(interval.clamp(1.5), 1.5);
         assert_eq!(interval.clamp(2.5), 2.0);
+    }
+
+    #[test]
+    fn interval_size_correct() {
+        let interval = Interval::new(1.0, 5.0);
+
+        assert_eq!(interval.size(), 4.0);
     }
 }
