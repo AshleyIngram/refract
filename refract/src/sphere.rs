@@ -266,13 +266,19 @@ mod tests {
             )),
         );
 
-        assert_eq!(sphere.bounding_box(), BoundingBox::new(Point::new(-0.5, -0.5, -1.5), Point::new(0.5, 0.5, -0.5)));
+        assert_eq!(
+            sphere.bounding_box(),
+            BoundingBox::new(Point::new(-0.5, -0.5, -1.5), Point::new(0.5, 0.5, -0.5))
+        );
     }
 
     #[test]
     fn moving_sphere_bounding_box_is_correct() {
         let sphere = moving_sphere_along_z();
 
-        assert_eq!(sphere.bounding_box(), BoundingBox::new(Point::new(-0.5, -0.5, -3.5), Point::new(0.5, 0.5, -0.5)));
+        assert_eq!(
+            sphere.bounding_box(),
+            BoundingBox::new(Point::new(-0.5, -0.5, -3.5), Point::new(0.5, 0.5, -0.5))
+        );
     }
 }

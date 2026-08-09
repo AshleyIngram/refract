@@ -1,4 +1,5 @@
 pub mod bounding_box;
+pub mod bvh_node;
 pub mod camera;
 pub mod canvas;
 pub mod color;

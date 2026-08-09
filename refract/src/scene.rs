@@ -1,7 +1,8 @@
-use std::{mem::take, sync::Arc};
+use std::sync::Arc;
 
 use crate::{
     bounding_box::BoundingBox,
+    bvh_node::BvhNode,
     hittable::{HitResult, Hittable},
     interval::Interval,
     ray::Ray,
@@ -35,8 +36,14 @@ impl SceneBuilder {
     }
 
     pub fn build(&mut self) -> Scene {
+        let objects: Vec<Arc<dyn Hittable>> = if self.objects.is_empty() {
+            Vec::new()
+        } else {
+            vec![BvhNode::new(&mut self.objects)]
+        };
+
         Scene {
-            objects: take(&mut self.objects),
+            objects,
             bounding_box: self.bounding_box,
         }
     }
@@ -165,6 +172,9 @@ mod tests {
         );
         let scene = SceneBuilder::new().add_object(near).add_object(far).build();
 
-        assert_eq!(scene.bounding_box(), BoundingBox::new(Point::new(-0.5, -0.5, -3.5), Point::new(0.5, 0.5, -0.5)));
+        assert_eq!(
+            scene.bounding_box(),
+            BoundingBox::new(Point::new(-0.5, -0.5, -3.5), Point::new(0.5, 0.5, -0.5))
+        );
     }
 }
