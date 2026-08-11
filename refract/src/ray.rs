@@ -1,5 +1,4 @@
-use crate::direction::Direction;
-use crate::point::Point;
+use super::{direction::Direction, point::Point};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ray {

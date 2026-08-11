@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Deref, Div, DivAssign, Mul, MulAssign, Neg, Sub};
 
-use crate::rng;
+use super::rng;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Direction {

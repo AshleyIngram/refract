@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Mul};
 
-use crate::rng::random_range;
+use super::rng::random_range;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Color {

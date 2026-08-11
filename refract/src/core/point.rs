@@ -1,4 +1,4 @@
-use crate::direction::Direction;
+use super::direction::Direction;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
