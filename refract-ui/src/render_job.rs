@@ -9,36 +9,9 @@ use refract::material::ReflectionType;
 use refract::pixel_buffer::PixelBuffer;
 use refract::point::Point;
 
-use refract::scene::Scene;
-use refract_scenes::{Book1Scene, DemoScene};
+pub use refract_scenes::SceneKind;
 
 pub const ASPECT_RATIO: f64 = 16.0 / 9.0;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SceneKind {
-    Demo,
-    Book1,
-}
-
-impl SceneKind {
-    pub const ALL: [Self; 2] = [Self::Demo, Self::Book1];
-
-    pub fn label(self) -> &'static str {
-        match self {
-            Self::Demo => "Demo",
-            Self::Book1 => "Book 1",
-        }
-    }
-
-    fn build(self, reflection_type: ReflectionType) -> Scene {
-        match self {
-            Self::Demo => DemoScene::build(reflection_type),
-            Self::Book1 => Book1Scene::build(reflection_type),
-        }
-    }
-}
-
-/// Image height for a given width, matching how `Camera` derives it.
 pub fn derived_height(width: i32) -> i32 {
     ((width as f64 / ASPECT_RATIO) as i32).max(1)
 }

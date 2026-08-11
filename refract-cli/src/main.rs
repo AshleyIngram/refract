@@ -1,4 +1,6 @@
+use std::env;
 use std::io::{Write, stderr, stdout};
+use std::process;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
@@ -9,7 +11,7 @@ use refract::canvas::PixelSink;
 use refract::canvas::write_ppm;
 use refract::material::ReflectionType;
 use refract::pixel_buffer::PixelBuffer;
-use refract_scenes::DemoScene;
+use refract_scenes::SceneKind;
 
 fn spawn_progress_reporter(
     buffer: Arc<PixelBuffer>,
@@ -44,13 +46,56 @@ fn spawn_progress_reporter(
     })
 }
 
+fn print_usage(program: &str) {
+    eprintln!("Usage: {program} [--scene <demo|book1>]");
+    eprintln!();
+    eprintln!("Options:");
+    eprintln!("  --scene, -s   Scene to render (default: demo)");
+    eprintln!("  --help,  -h   Show this help message");
+}
+
+fn parse_args() -> SceneKind {
+    let mut args = env::args();
+    let program = args.next().unwrap_or_else(|| "refract-cli".to_string());
+
+    let mut scene = SceneKind::default();
+
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "--scene" | "-s" => {
+                let value = args.next().unwrap_or_else(|| {
+                    eprintln!("error: --scene requires a value (demo or book1)");
+                    process::exit(1);
+                });
+                scene = SceneKind::parse(&value).unwrap_or_else(|| {
+                    eprintln!("error: unknown scene '{value}' (expected demo or book1)");
+                    process::exit(1);
+                });
+            }
+            "--help" | "-h" => {
+                print_usage(&program);
+                process::exit(0);
+            }
+            other => {
+                eprintln!("error: unknown argument '{other}'");
+                print_usage(&program);
+                process::exit(1);
+            }
+        }
+    }
+
+    scene
+}
+
 fn main() {
+    let scene_kind = parse_args();
+
     let camera = Camera::new(RenderSettings {
         samples_per_pixel: 10,
         ..RenderSettings::default()
     });
     let buffer = Arc::new(PixelBuffer::new(camera.width as u32, camera.height as u32));
-    let scene = DemoScene::build(ReflectionType::Lambertian);
+    let scene = scene_kind.build(ReflectionType::Lambertian);
 
     let done = Arc::new(AtomicBool::new(false));
     let reporter = spawn_progress_reporter(Arc::clone(&buffer), Arc::clone(&done));
