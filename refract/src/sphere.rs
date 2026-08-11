@@ -87,7 +87,7 @@ impl Hittable for Sphere {
         root.map(|t| {
             let point = ray.at(t);
             let normal = ((point - current_center) / self.radius).normalize();
-            HitResult::new(ray, point, t, normal, Arc::clone(&self.material))
+            HitResult::new(ray, point, t, 0.0, 0.0, normal, Arc::clone(&self.material))
         })
     }
 

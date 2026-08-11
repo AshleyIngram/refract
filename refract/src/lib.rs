@@ -11,3 +11,4 @@ pub mod surfaces;
 pub use core::{color, direction, interval, point, rng};
 pub use render::{camera, canvas, pixel_buffer};
 pub use surfaces::material;
+pub use surfaces::texture::checker_texture;

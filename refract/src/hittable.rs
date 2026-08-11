@@ -17,6 +17,8 @@ pub struct HitResult {
     pub normal: UnitDirection,
     pub front_face: bool,
     pub material: Arc<dyn Material>,
+    pub u: f32,
+    pub v: f32,
 }
 
 impl HitResult {
@@ -24,6 +26,8 @@ impl HitResult {
         ray: &Ray,
         point: Point,
         t: f32,
+        u: f32,
+        v: f32,
         outward_normal: UnitDirection,
         material: Arc<dyn Material>,
     ) -> Self {
@@ -36,6 +40,8 @@ impl HitResult {
         Self {
             point,
             t,
+            u,
+            v,
             front_face,
             normal,
             material,

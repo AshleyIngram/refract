@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use refract::{
+    checker_texture::CheckerTexture,
     color::Color,
     direction::Direction,
     material::{Dielectric, Material, Matte, Metal, ReflectionType},
@@ -16,10 +17,15 @@ impl DemoScene {
     pub fn build(reflection_type: ReflectionType) -> Scene {
         let mut scene_builder = SceneBuilder::new();
 
+        let checker_texture =
+            CheckerTexture::from_colors(0.32, Color::new(0.2, 0.3, 0.1), Color::new(0.9, 0.9, 0.9));
         let ground = Sphere::new_stationary(
             Point::new(0.0, -1000.0, 0.0),
             1000.0,
-            Arc::new(Matte::new(Color::new(0.5, 0.5, 0.5), reflection_type)),
+            Arc::new(Matte::with_texture(
+                Arc::new(checker_texture),
+                reflection_type,
+            )),
         );
 
         scene_builder.add_object(ground);

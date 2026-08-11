@@ -1,5 +1,12 @@
+use std::sync::Arc;
+
 use crate::{
-    color::Color, direction::UnitDirection, hittable::HitResult, ray::Ray, rng::random_range,
+    color::Color,
+    direction::UnitDirection,
+    hittable::HitResult,
+    ray::Ray,
+    rng::random_range,
+    surfaces::texture::{solid_color_texture::SolidColorTexture, texture::Texture},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -22,14 +29,21 @@ pub trait Material: Send + Sync {
 }
 
 pub struct Matte {
-    albedo: Color,
+    texture: Arc<dyn Texture>,
     reflection_type: ReflectionType,
 }
 
 impl Matte {
     pub fn new(albedo: Color, reflection_type: ReflectionType) -> Self {
         Self {
-            albedo,
+            texture: Arc::new(SolidColorTexture::new(albedo)),
+            reflection_type,
+        }
+    }
+
+    pub fn with_texture(texture: Arc<dyn Texture>, reflection_type: ReflectionType) -> Self {
+        Self {
+            texture,
             reflection_type,
         }
     }
@@ -51,7 +65,9 @@ impl Material for Matte {
         let scattered = Ray::new_at_time(hit_result.point, scatter_direction, ray.time());
 
         Some(ScatterResult {
-            attenuation: self.albedo,
+            attenuation: self
+                .texture
+                .value(hit_result.u, hit_result.v, hit_result.point),
             scattered,
         })
     }
@@ -150,7 +166,7 @@ mod tests {
         outward_normal: UnitDirection,
         material: Arc<dyn Material>,
     ) -> HitResult {
-        HitResult::new(incident, point, 1.0, outward_normal, material)
+        HitResult::new(incident, point, 0.0, 0.0, 1.0, outward_normal, material)
     }
 
     #[test]
