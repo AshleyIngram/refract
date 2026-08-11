@@ -1,15 +1,10 @@
-pub mod bounding_box;
-pub mod bvh_node;
-pub mod camera;
-pub mod canvas;
-pub mod color;
-pub mod direction;
-pub mod hittable;
-pub mod interval;
-pub mod material;
-pub mod pixel_buffer;
-pub mod point;
-pub mod ray;
-pub mod rng;
-pub mod scene;
-pub mod sphere;
+pub mod core;
+pub mod render;
+pub mod surfaces;
+
+pub use core::{
+    bounding_box, bvh_node, color, direction, hittable, interval, point, ray, rng, scene,
+    sphere,
+};
+pub use render::{camera, canvas, pixel_buffer};
+pub use surfaces::material;
