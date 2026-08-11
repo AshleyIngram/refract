@@ -2,7 +2,7 @@ use eframe::egui::{self, Button, ComboBox, DragValue, Grid, Ui};
 use refract::material::ReflectionType;
 use refract::point::Point;
 
-use crate::render_job::{RenderConfig, derived_height};
+use crate::render_job::{RenderConfig, SceneKind, derived_height};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SettingsAction {
@@ -15,6 +15,7 @@ pub fn show(ui: &mut Ui, config: &mut RenderConfig, is_rendering: bool) -> Setti
     ui.heading("Settings");
     ui.add_space(8.0);
 
+    section(ui, "Scene", |ui| scene_settings(ui, config));
     section(ui, "Image", |ui| image_settings(ui, config));
     section(ui, "Camera", |ui| camera_settings(ui, config));
     section(ui, "Materials", |ui| material_settings(ui, config));
@@ -28,6 +29,16 @@ fn section(ui: &mut Ui, title: &str, add_contents: impl FnOnce(&mut Ui)) {
         .default_open(true)
         .show(ui, add_contents);
     ui.add_space(4.0);
+}
+
+fn scene_settings(ui: &mut Ui, config: &mut RenderConfig) {
+    ComboBox::from_label("Scene")
+        .selected_text(config.scene.label())
+        .show_ui(ui, |ui| {
+            for scene in SceneKind::ALL {
+                ui.selectable_value(&mut config.scene, scene, scene.label());
+            }
+        });
 }
 
 fn image_settings(ui: &mut Ui, config: &mut RenderConfig) {

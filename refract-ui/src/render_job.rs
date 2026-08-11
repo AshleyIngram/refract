@@ -9,9 +9,34 @@ use refract::material::ReflectionType;
 use refract::pixel_buffer::PixelBuffer;
 use refract::point::Point;
 
-use refract_scenes::DemoScene;
+use refract::scene::Scene;
+use refract_scenes::{Book1Scene, DemoScene};
 
 pub const ASPECT_RATIO: f64 = 16.0 / 9.0;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SceneKind {
+    Demo,
+    Book1,
+}
+
+impl SceneKind {
+    pub const ALL: [Self; 2] = [Self::Demo, Self::Book1];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Demo => "Demo",
+            Self::Book1 => "Book 1",
+        }
+    }
+
+    fn build(self, reflection_type: ReflectionType) -> Scene {
+        match self {
+            Self::Demo => DemoScene::build(reflection_type),
+            Self::Book1 => Book1Scene::build(reflection_type),
+        }
+    }
+}
 
 /// Image height for a given width, matching how `Camera` derives it.
 pub fn derived_height(width: i32) -> i32 {
@@ -29,6 +54,7 @@ pub struct RenderConfig {
     pub defocus_angle: f32,
     pub focus_distance: f32,
     pub reflection_type: ReflectionType,
+    pub scene: SceneKind,
 }
 
 impl Default for RenderConfig {
@@ -45,6 +71,7 @@ impl Default for RenderConfig {
             defocus_angle: 0.6,
             focus_distance: 10.0,
             reflection_type: ReflectionType::Lambertian,
+            scene: SceneKind::Demo,
         }
     }
 }
@@ -84,7 +111,7 @@ impl RenderJob {
         let worker_buffer = Arc::clone(&buffer);
         let worker_duration = Arc::clone(&final_duration);
         thread::spawn(move || {
-            let scene = DemoScene::build(config.reflection_type);
+            let scene = config.scene.build(config.reflection_type);
             camera.render(&scene, worker_buffer.as_ref());
             let _ = worker_duration.set(started_at.elapsed());
         });
