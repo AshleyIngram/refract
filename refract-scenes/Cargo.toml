@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 refract = { path = "../refract" }
+strum = { version = "0.28.0", features = ["derive"] }

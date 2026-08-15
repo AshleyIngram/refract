@@ -46,8 +46,19 @@ fn spawn_progress_reporter(
     })
 }
 
+fn scene_names_for_help() -> String {
+    SceneKind::all()
+        .map(|scene| match scene {
+            SceneKind::Book1 => "book1|book-1".to_string(),
+            scene => format!("{scene:?}").to_lowercase(),
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
 fn print_usage(program: &str) {
-    eprintln!("Usage: {program} [--scene <demo|book1>]");
+    let scenes = scene_names_for_help();
+    eprintln!("Usage: {program} [--scene <{scenes}>]");
     eprintln!();
     eprintln!("Options:");
     eprintln!("  --scene, -s   Scene to render (default: demo)");
@@ -57,6 +68,7 @@ fn print_usage(program: &str) {
 fn parse_args() -> SceneKind {
     let mut args = env::args();
     let program = args.next().unwrap_or_else(|| "refract-cli".to_string());
+    let scenes = scene_names_for_help();
 
     let mut scene = SceneKind::default();
 
@@ -64,11 +76,11 @@ fn parse_args() -> SceneKind {
         match arg.as_str() {
             "--scene" | "-s" => {
                 let value = args.next().unwrap_or_else(|| {
-                    eprintln!("error: --scene requires a value (demo or book1)");
+                    eprintln!("error: --scene requires a value ({scenes})");
                     process::exit(1);
                 });
                 scene = SceneKind::parse(&value).unwrap_or_else(|| {
-                    eprintln!("error: unknown scene '{value}' (expected demo or book1)");
+                    eprintln!("error: unknown scene '{value}' (expected {scenes})");
                     process::exit(1);
                 });
             }

@@ -33,10 +33,10 @@ fn section(ui: &mut Ui, title: &str, add_contents: impl FnOnce(&mut Ui)) {
 
 fn scene_settings(ui: &mut Ui, config: &mut RenderConfig) {
     ComboBox::from_label("Scene")
-        .selected_text(config.scene.label())
+        .selected_text(config.scene.to_string())
         .show_ui(ui, |ui| {
-            for scene in SceneKind::ALL {
-                ui.selectable_value(&mut config.scene, scene, scene.label());
+            for scene in SceneKind::all() {
+                ui.selectable_value(&mut config.scene, scene, scene.to_string());
             }
         });
 }
