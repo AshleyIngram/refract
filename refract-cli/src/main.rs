@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
 
-use refract::camera::{Camera, RenderSettings};
+use refract::camera::Camera;
 use refract::canvas::PixelSink;
 use refract::canvas::write_ppm;
 use refract::material::ReflectionType;
@@ -101,11 +101,10 @@ fn parse_args() -> SceneKind {
 
 fn main() {
     let scene_kind = parse_args();
+    let mut settings = scene_kind.default_render_settings();
+    settings.samples_per_pixel = 10;
 
-    let camera = Camera::new(RenderSettings {
-        samples_per_pixel: 10,
-        ..RenderSettings::default()
-    });
+    let camera = Camera::new(settings);
     let buffer = Arc::new(PixelBuffer::new(camera.width as u32, camera.height as u32));
     let scene = scene_kind.build(ReflectionType::Lambertian);
 

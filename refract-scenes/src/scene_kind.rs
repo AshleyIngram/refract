@@ -1,9 +1,10 @@
 use std::str::FromStr;
 
+use refract::camera::RenderSettings;
 use refract::{material::ReflectionType, scene::Scene};
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
 
-use crate::{Book1Scene, DemoScene, TexturesScene};
+use crate::{Book1Scene, DemoScene, ScenePreset, TexturesScene};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, EnumIter, Display, EnumString)]
 #[strum(serialize_all = "lowercase", ascii_case_insensitive)]
@@ -28,9 +29,17 @@ impl SceneKind {
 
     pub fn build(self, reflection_type: ReflectionType) -> Scene {
         match self {
-            Self::Demo => DemoScene::build(reflection_type),
-            Self::Book1 => Book1Scene::build(reflection_type),
-            Self::Textures => TexturesScene::build(reflection_type),
+            Self::Demo => DemoScene.build(reflection_type),
+            Self::Book1 => Book1Scene.build(reflection_type),
+            Self::Textures => TexturesScene.build(reflection_type),
+        }
+    }
+
+    pub fn default_render_settings(self) -> RenderSettings {
+        match self {
+            Self::Demo => DemoScene.default_render_settings(),
+            Self::Book1 => Book1Scene.default_render_settings(),
+            Self::Textures => TexturesScene.default_render_settings(),
         }
     }
 }
@@ -85,5 +94,12 @@ mod tests {
     #[test]
     fn build_returns_scene() {
         let _scene = SceneKind::Demo.build(ReflectionType::Lambertian);
+    }
+
+    #[test]
+    fn default_render_settings_returns_values() {
+        let settings = SceneKind::Textures.default_render_settings();
+
+        assert_eq!(settings.defocus_angle, 0.0);
     }
 }

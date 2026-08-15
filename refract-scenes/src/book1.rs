@@ -9,10 +9,12 @@ use refract::{
     sphere::Sphere,
 };
 
+use crate::ScenePreset;
+
 pub struct Book1Scene;
 
-impl Book1Scene {
-    pub fn build(reflection_type: ReflectionType) -> Scene {
+impl ScenePreset for Book1Scene {
+    fn build(&self, reflection_type: ReflectionType) -> Scene {
         let mut scene_builder = SceneBuilder::new();
 
         let ground = Sphere::new_stationary(

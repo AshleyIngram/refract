@@ -16,6 +16,9 @@ pub fn derived_height(width: i32) -> i32 {
     ((width as f64 / ASPECT_RATIO) as i32).max(1)
 }
 
+/// UI render settings. Scene presets may define width and aspect ratio, but
+/// [`build_camera`] always uses [`ASPECT_RATIO`] regardless of the preset's
+/// `aspect_ratio` field.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RenderConfig {
     pub width: i32,
@@ -32,24 +35,38 @@ pub struct RenderConfig {
 
 impl Default for RenderConfig {
     fn default() -> Self {
-        let settings = RenderSettings::default();
+        let scene = SceneKind::default();
+        let settings = scene.default_render_settings();
 
         Self {
-            width: 1200,
+            width: settings.width,
             samples_per_pixel: settings.samples_per_pixel,
             max_depth: settings.max_depth,
-            field_of_view: 20.0,
-            look_from: Point::new(13.0, 2.0, 3.0),
-            look_at: Point::new(0.0, 0.0, 0.0),
-            defocus_angle: 0.6,
-            focus_distance: 10.0,
+            field_of_view: settings.vertical_field_of_view,
+            look_from: settings.camera_center,
+            look_at: settings.look_at,
+            defocus_angle: settings.defocus_angle,
+            focus_distance: settings.focus_distance,
             reflection_type: ReflectionType::Lambertian,
-            scene: SceneKind::Demo,
+            scene,
         }
     }
 }
 
 impl RenderConfig {
+    fn apply_camera_from(&mut self, settings: &RenderSettings) {
+        self.field_of_view = settings.vertical_field_of_view;
+        self.look_from = settings.camera_center;
+        self.look_at = settings.look_at;
+        self.defocus_angle = settings.defocus_angle;
+        self.focus_distance = settings.focus_distance;
+    }
+
+    pub fn apply_scene_camera_defaults(&mut self) {
+        let settings = self.scene.default_render_settings();
+        self.apply_camera_from(&settings);
+    }
+
     fn build_camera(&self) -> Camera {
         Camera::new(RenderSettings {
             width: self.width,
@@ -83,8 +100,10 @@ impl RenderJob {
 
         let worker_buffer = Arc::clone(&buffer);
         let worker_duration = Arc::clone(&final_duration);
+        let scene_kind = config.scene;
+        let reflection_type = config.reflection_type;
         thread::spawn(move || {
-            let scene = config.scene.build(config.reflection_type);
+            let scene = scene_kind.build(reflection_type);
             camera.render(&scene, worker_buffer.as_ref());
             let _ = worker_duration.set(started_at.elapsed());
         });

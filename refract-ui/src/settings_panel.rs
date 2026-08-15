@@ -32,6 +32,8 @@ fn section(ui: &mut Ui, title: &str, add_contents: impl FnOnce(&mut Ui)) {
 }
 
 fn scene_settings(ui: &mut Ui, config: &mut RenderConfig) {
+    let previous_scene = config.scene;
+
     ComboBox::from_label("Scene")
         .selected_text(config.scene.to_string())
         .show_ui(ui, |ui| {
@@ -39,6 +41,10 @@ fn scene_settings(ui: &mut Ui, config: &mut RenderConfig) {
                 ui.selectable_value(&mut config.scene, scene, scene.to_string());
             }
         });
+
+    if config.scene != previous_scene {
+        config.apply_scene_camera_defaults();
+    }
 }
 
 fn image_settings(ui: &mut Ui, config: &mut RenderConfig) {

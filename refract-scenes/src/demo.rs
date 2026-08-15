@@ -11,10 +11,12 @@ use refract::{
     sphere::Sphere,
 };
 
+use crate::ScenePreset;
+
 pub struct DemoScene;
 
-impl DemoScene {
-    pub fn build(reflection_type: ReflectionType) -> Scene {
+impl ScenePreset for DemoScene {
+    fn build(&self, reflection_type: ReflectionType) -> Scene {
         let mut scene_builder = SceneBuilder::new();
 
         let checker_texture =

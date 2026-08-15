@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use refract::camera::RenderSettings;
 use refract::{
     checker_texture::CheckerTexture,
     color::Color,
@@ -9,10 +10,12 @@ use refract::{
     sphere::Sphere,
 };
 
+use crate::ScenePreset;
+
 pub struct TexturesScene;
 
-impl TexturesScene {
-    pub fn build(reflection_type: ReflectionType) -> Scene {
+impl ScenePreset for TexturesScene {
+    fn build(&self, reflection_type: ReflectionType) -> Scene {
         let mut scene_builder = SceneBuilder::new();
 
         let texture =
@@ -26,5 +29,12 @@ impl TexturesScene {
         scene_builder.add_object(sphere2);
 
         scene_builder.build()
+    }
+
+    fn default_render_settings(&self) -> RenderSettings {
+        RenderSettings {
+            defocus_angle: 0.0,
+            ..RenderSettings::default()
+        }
     }
 }
