@@ -51,6 +51,18 @@ impl Sphere {
             bounding_box,
         }
     }
+
+    fn get_sphere_uv(point: Point) -> (f32, f32) {
+        const PI: f32 = std::f32::consts::PI;
+
+        let theta = (-point.y).acos();
+        let phi = (-point.z).atan2(point.x) + PI;
+
+        let u = phi / (2.0 * PI);
+        let v = theta / PI;
+
+        (u, v)
+    }
 }
 
 impl Hittable for Sphere {
@@ -87,7 +99,8 @@ impl Hittable for Sphere {
         root.map(|t| {
             let point = ray.at(t);
             let normal = ((point - current_center) / self.radius).normalize();
-            HitResult::new(ray, point, t, 0.0, 0.0, normal, Arc::clone(&self.material))
+            let (u, v) = Self::get_sphere_uv(Point::new(normal.x, normal.y, normal.z));
+            HitResult::new(ray, point, t, u, v, normal, Arc::clone(&self.material))
         })
     }
 
@@ -280,5 +293,25 @@ mod tests {
             sphere.bounding_box(),
             BoundingBox::new(Point::new(-0.5, -0.5, -3.5), Point::new(0.5, 0.5, -0.5))
         );
+    }
+
+    #[test]
+    fn get_sphere_uv_cardinal_directions_correct() {
+        const CASES: [((f32, f32, f32), (f32, f32)); 6] = [
+            ((1.0, 0.0, 0.0), (0.5, 0.5)),
+            ((-1.0, 0.0, 0.0), (0.0, 0.5)),
+            ((0.0, 1.0, 0.0), (0.5, 1.0)),
+            ((0.0, -1.0, 0.0), (0.5, 0.0)),
+            ((0.0, 0.0, 1.0), (0.25, 0.5)),
+            ((0.0, 0.0, -1.0), (0.75, 0.5)),
+        ];
+
+        for ((x, y, z), expected) in CASES {
+            let direction = Point::new(x, y, z);
+            let actual = Sphere::get_sphere_uv(direction);
+
+            assert!(actual.0 - expected.0 < f32::EPSILON);
+            assert!(actual.1 - expected.1 < f32::EPSILON);
+        }
     }
 }
