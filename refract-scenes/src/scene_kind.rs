@@ -4,7 +4,7 @@ use refract::camera::RenderSettings;
 use refract::{material::ReflectionType, scene::Scene};
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
 
-use crate::{Book1Scene, DemoScene, ScenePreset, TexturesScene};
+use crate::{Book1Scene, DemoScene, EarthScene, ScenePreset};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, EnumIter, Display, EnumString)]
 #[strum(serialize_all = "lowercase", ascii_case_insensitive)]
@@ -14,8 +14,8 @@ pub enum SceneKind {
     Demo,
     #[strum(serialize = "book1", serialize = "book-1", to_string = "Book 1")]
     Book1,
-    #[strum(to_string = "Textures")]
-    Textures,
+    #[strum(to_string = "Earth")]
+    Earth,
 }
 
 impl SceneKind {
@@ -31,7 +31,7 @@ impl SceneKind {
         match self {
             Self::Demo => DemoScene.build(reflection_type),
             Self::Book1 => Book1Scene.build(reflection_type),
-            Self::Textures => TexturesScene.build(reflection_type),
+            Self::Earth => EarthScene.build(reflection_type),
         }
     }
 
@@ -39,7 +39,7 @@ impl SceneKind {
         match self {
             Self::Demo => DemoScene.default_render_settings(),
             Self::Book1 => Book1Scene.default_render_settings(),
-            Self::Textures => TexturesScene.default_render_settings(),
+            Self::Earth => EarthScene.default_render_settings(),
         }
     }
 }
@@ -68,9 +68,9 @@ mod tests {
     }
 
     #[test]
-    fn parse_textures() {
-        assert_eq!(SceneKind::parse("textures"), Some(SceneKind::Textures));
-        assert_eq!(SceneKind::parse("Textures"), Some(SceneKind::Textures));
+    fn parse_earth() {
+        assert_eq!(SceneKind::parse("earth"), Some(SceneKind::Earth));
+        assert_eq!(SceneKind::parse("Earth"), Some(SceneKind::Earth));
     }
 
     #[test]
@@ -88,7 +88,7 @@ mod tests {
     fn display_labels() {
         assert_eq!(SceneKind::Demo.to_string(), "Demo");
         assert_eq!(SceneKind::Book1.to_string(), "Book 1");
-        assert_eq!(SceneKind::Textures.to_string(), "Textures");
+        assert_eq!(SceneKind::Earth.to_string(), "Earth");
     }
 
     #[test]
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn default_render_settings_returns_values() {
-        let settings = SceneKind::Textures.default_render_settings();
+        let settings = SceneKind::Earth.default_render_settings();
 
         assert_eq!(settings.defocus_angle, 0.0);
     }

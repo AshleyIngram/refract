@@ -11,9 +11,9 @@ use refract::{
 
 use crate::ScenePreset;
 
-pub struct TexturesScene;
+pub struct EarthScene;
 
-impl ScenePreset for TexturesScene {
+impl ScenePreset for EarthScene {
     fn build(&self, reflection_type: ReflectionType) -> Scene {
         let mut scene_builder = SceneBuilder::new();
 
