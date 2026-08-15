@@ -4,5 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+load_image = "3.3.2"
+log = "0.4.33"
 rand = "0.10.2"
 rayon = "1.12"
