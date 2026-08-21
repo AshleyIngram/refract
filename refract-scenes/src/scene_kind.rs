@@ -4,7 +4,7 @@ use refract::camera::RenderSettings;
 use refract::{material::ReflectionType, scene::Scene};
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
 
-use crate::{Book1Scene, DemoScene, EarthScene, ScenePreset};
+use crate::{Book1Scene, DemoScene, EarthScene, PerlinNoiseScene, ScenePreset};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, EnumIter, Display, EnumString)]
 #[strum(serialize_all = "lowercase", ascii_case_insensitive)]
@@ -16,6 +16,12 @@ pub enum SceneKind {
     Book1,
     #[strum(to_string = "Earth")]
     Earth,
+    #[strum(
+        serialize = "perlin-noise",
+        serialize = "PerlinNoise",
+        to_string = "Perlin Noise"
+    )]
+    PerlinNoise,
 }
 
 impl SceneKind {
@@ -32,6 +38,7 @@ impl SceneKind {
             Self::Demo => DemoScene.build(reflection_type),
             Self::Book1 => Book1Scene.build(reflection_type),
             Self::Earth => EarthScene.build(reflection_type),
+            Self::PerlinNoise => PerlinNoiseScene.build(reflection_type),
         }
     }
 
@@ -40,6 +47,7 @@ impl SceneKind {
             Self::Demo => DemoScene.default_render_settings(),
             Self::Book1 => Book1Scene.default_render_settings(),
             Self::Earth => EarthScene.default_render_settings(),
+            Self::PerlinNoise => PerlinNoiseScene.default_render_settings(),
         }
     }
 }
@@ -52,7 +60,7 @@ mod tests {
 
     #[test]
     fn iter_includes_every_variant() {
-        assert_eq!(SceneKind::iter().count(), 3);
+        assert_eq!(SceneKind::iter().count(), 4);
     }
 
     #[test]
@@ -71,6 +79,18 @@ mod tests {
     fn parse_earth() {
         assert_eq!(SceneKind::parse("earth"), Some(SceneKind::Earth));
         assert_eq!(SceneKind::parse("Earth"), Some(SceneKind::Earth));
+    }
+
+    #[test]
+    fn parse_perlin_noise() {
+        assert_eq!(
+            SceneKind::parse("perlin-noise"),
+            Some(SceneKind::PerlinNoise)
+        );
+        assert_eq!(
+            SceneKind::parse("PerlinNoise"),
+            Some(SceneKind::PerlinNoise)
+        );
     }
 
     #[test]
