@@ -17,7 +17,7 @@ impl ScenePreset for PerlinNoiseScene {
     fn build(&self, reflection_type: ReflectionType) -> Scene {
         let mut scene_builder = SceneBuilder::new();
 
-        let texture = PerlinNoiseTexture::new();
+        let texture = PerlinNoiseTexture::new(4.0);
         let material = Arc::new(Matte::with_texture(Arc::new(texture), reflection_type));
 
         scene_builder

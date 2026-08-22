@@ -10,16 +10,17 @@ pub struct PerlinNoiseTexture {
     shuffled_x: [usize; POINT_COUNT],
     shuffled_y: [usize; POINT_COUNT],
     shuffled_z: [usize; POINT_COUNT],
+    scale: f32,
 }
 
 impl Texture for PerlinNoiseTexture {
     fn value(&self, _u: f32, _v: f32, p: Point) -> Color {
-        Color::new(1.0, 1.0, 1.0) * self.perlin_noise(p)
+        Color::new(1.0, 1.0, 1.0) * self.perlin_noise(p * self.scale)
     }
 }
 
 impl PerlinNoiseTexture {
-    pub fn new() -> Self {
+    pub fn new(scale: f32) -> Self {
         let random_floats = array::from_fn(|_| random_range(0.0..1.0));
 
         let mut rng = rand::rng();
@@ -33,6 +34,7 @@ impl PerlinNoiseTexture {
             shuffled_x,
             shuffled_y,
             shuffled_z,
+            scale,
         }
     }
 
@@ -110,6 +112,7 @@ mod tests {
             shuffled_x: array::from_fn(|i| i),
             shuffled_y: array::from_fn(|i| i),
             shuffled_z: array::from_fn(|i| i),
+            scale: 1.0,
         }
     }
 

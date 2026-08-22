@@ -32,11 +32,9 @@ impl CheckerTexture {
 
 impl Texture for CheckerTexture {
     fn value(&self, u: f32, v: f32, p: Point) -> Color {
-        let x = f32::floor(self.inverted_scale * p.x) as i32;
-        let y = f32::floor(self.inverted_scale * p.y) as i32;
-        let z = f32::floor(self.inverted_scale * p.z) as i32;
+        let scaled_point = p * self.inverted_scale;
 
-        let is_even = (x + y + z) % 2 == 0;
+        let is_even = f32::floor(scaled_point.x + scaled_point.y + scaled_point.z) as i32 % 2 == 0;
 
         if is_even {
             self.even.value(u, v, p)

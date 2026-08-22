@@ -1,5 +1,5 @@
 use super::direction::Direction;
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Point {
@@ -142,6 +142,22 @@ impl SubAssign<&Direction> for Point {
     }
 }
 
+impl Mul<f32> for Point {
+    type Output = Point;
+
+    fn mul(self, other: f32) -> Point {
+        Point::new(self.x * other, self.y * other, self.z * other)
+    }
+}
+
+impl Mul<f32> for &Point {
+    type Output = Point;
+
+    fn mul(self, other: f32) -> Point {
+        *self * other
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -196,5 +212,14 @@ mod tests {
         point = Point::new(1.0, 1.0, 1.0);
         point -= &direction;
         assert_eq!(point, expected_result);
+    }
+
+    #[test]
+    fn point_mul_correct() {
+        let point = Point::new(1.0, 1.0, 1.0);
+        let expected_result = Point::new(2.0, 2.0, 2.0);
+
+        assert_eq!(point * 2.0, expected_result);
+        assert_eq!(&point * 2.0, expected_result);
     }
 }
