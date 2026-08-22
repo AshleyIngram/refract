@@ -54,9 +54,9 @@ impl PerlinNoiseTexture {
     ];
 
     fn perlin_noise(&self, p: Point) -> f32 {
-        let u = p.x - p.x.floor();
-        let v = p.y - p.y.floor();
-        let w = p.z - p.z.floor();
+        let u = Self::smoothstep(p.x - p.x.floor());
+        let v = Self::smoothstep(p.y - p.y.floor());
+        let w = Self::smoothstep(p.z - p.z.floor());
 
         let cell_x = p.x.floor() as i32;
         let cell_y = p.y.floor() as i32;
@@ -66,6 +66,10 @@ impl PerlinNoiseTexture {
             Self::CORNERS.map(|(dx, dy, dz)| self.hash(cell_x + dx, cell_y + dy, cell_z + dz));
 
         Self::trilinear(corners, u, v, w)
+    }
+
+    fn smoothstep(x: f32) -> f32 {
+        x * x * (3.0 - 2.0 * x)
     }
 
     fn hash(&self, x: i32, y: i32, z: i32) -> f32 {
