@@ -20,7 +20,8 @@ pub struct PerlinNoiseTexture {
 
 impl Texture for PerlinNoiseTexture {
     fn value(&self, _u: f32, _v: f32, p: Point) -> Color {
-        Color::new(1.0, 1.0, 1.0) * 0.5 * (1.0 + self.perlin_noise(p * self.scale))
+        Color::new(0.5, 0.5, 0.5)
+            * (1.0 + f32::sin(self.scale * p.z + 10.0 * self.turbulence(p, 7)))
     }
 }
 
@@ -60,6 +61,20 @@ impl PerlinNoiseTexture {
         (0, 1, 1),
         (1, 1, 1),
     ];
+
+    fn turbulence(&self, p: Point, depth: usize) -> f32 {
+        let mut accum = 0.0;
+        let mut temp_p = p;
+        let mut weight = 1.0;
+
+        for _ in 0..depth {
+            accum += weight * self.perlin_noise(temp_p);
+            weight *= 0.5;
+            temp_p = Point::new(temp_p.x * 2.0, temp_p.y * 2.0, temp_p.z * 2.0);
+        }
+
+        accum.abs()
+    }
 
     fn perlin_noise(&self, p: Point) -> f32 {
         let fx = p.x - p.x.floor();
