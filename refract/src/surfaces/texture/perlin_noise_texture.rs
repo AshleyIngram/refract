@@ -1,12 +1,17 @@
 use std::array;
 
-use crate::{color::Color, point::Point, rng::random_range, surfaces::texture::texture::Texture};
+use crate::{
+    color::Color,
+    direction::{Direction, UnitDirection},
+    point::Point,
+    surfaces::texture::texture::Texture,
+};
 use rand::seq::SliceRandom;
 
 const POINT_COUNT: usize = 256;
 
 pub struct PerlinNoiseTexture {
-    random_floats: [f32; POINT_COUNT],
+    random_directions: [UnitDirection; POINT_COUNT],
     shuffled_x: [usize; POINT_COUNT],
     shuffled_y: [usize; POINT_COUNT],
     shuffled_z: [usize; POINT_COUNT],
@@ -15,13 +20,14 @@ pub struct PerlinNoiseTexture {
 
 impl Texture for PerlinNoiseTexture {
     fn value(&self, _u: f32, _v: f32, p: Point) -> Color {
-        Color::new(1.0, 1.0, 1.0) * self.perlin_noise(p * self.scale)
+        Color::new(1.0, 1.0, 1.0) * 0.5 * (1.0 + self.perlin_noise(p * self.scale))
     }
 }
 
 impl PerlinNoiseTexture {
     pub fn new(scale: f32) -> Self {
-        let random_floats = array::from_fn(|_| random_range(0.0..1.0));
+        let random_directions =
+            array::from_fn(|_| Direction::random_within_range(-1.0, 1.0).normalize());
 
         let mut rng = rand::rng();
 
@@ -30,7 +36,7 @@ impl PerlinNoiseTexture {
         let shuffled_z = Self::shuffled_indices(&mut rng);
 
         Self {
-            random_floats,
+            random_directions,
             shuffled_x,
             shuffled_y,
             shuffled_z,
@@ -56,36 +62,43 @@ impl PerlinNoiseTexture {
     ];
 
     fn perlin_noise(&self, p: Point) -> f32 {
-        let u = Self::smoothstep(p.x - p.x.floor());
-        let v = Self::smoothstep(p.y - p.y.floor());
-        let w = Self::smoothstep(p.z - p.z.floor());
+        let fx = p.x - p.x.floor();
+        let fy = p.y - p.y.floor();
+        let fz = p.z - p.z.floor();
+
+        let u = Self::smoothstep(fx);
+        let v = Self::smoothstep(fy);
+        let w = Self::smoothstep(fz);
 
         let cell_x = p.x.floor() as i32;
         let cell_y = p.y.floor() as i32;
         let cell_z = p.z.floor() as i32;
 
-        let corners =
-            Self::CORNERS.map(|(dx, dy, dz)| self.hash(cell_x + dx, cell_y + dy, cell_z + dz));
+        let corners = Self::CORNERS.map(|(dx, dy, dz)| {
+            let idx = self.hash_index(cell_x + dx, cell_y + dy, cell_z + dz);
+            let offset = Direction::new(fx - dx as f32, fy - dy as f32, fz - dz as f32);
+            self.random_directions[idx].dot(offset)
+        });
 
-        Self::trilinear(corners, u, v, w)
+        Self::interpolate_corners(corners, u, v, w)
     }
 
     fn smoothstep(x: f32) -> f32 {
         x * x * (3.0 - 2.0 * x)
     }
 
-    fn hash(&self, x: i32, y: i32, z: i32) -> f32 {
+    fn hash_index(&self, x: i32, y: i32, z: i32) -> usize {
         let idx = self.shuffled_x[(x & 255) as usize]
             ^ self.shuffled_y[(y & 255) as usize]
             ^ self.shuffled_z[(z & 255) as usize];
-        self.random_floats[idx]
+        idx
     }
 
     fn lerp(a: f32, b: f32, t: f32) -> f32 {
         a + t * (b - a)
     }
 
-    fn trilinear(corners: [f32; 8], u: f32, v: f32, w: f32) -> f32 {
+    fn interpolate_corners(corners: [f32; 8], u: f32, v: f32, w: f32) -> f32 {
         Self::lerp(
             Self::lerp(
                 Self::lerp(corners[0], corners[1], u),
@@ -108,7 +121,7 @@ mod tests {
 
     fn identity_texture() -> PerlinNoiseTexture {
         PerlinNoiseTexture {
-            random_floats: array::from_fn(|i| i as f32),
+            random_directions: array::from_fn(|_| Direction::new(1.0, 0.0, 0.0).normalize()),
             shuffled_x: array::from_fn(|i| i),
             shuffled_y: array::from_fn(|i| i),
             shuffled_z: array::from_fn(|i| i),
@@ -124,54 +137,74 @@ mod tests {
     }
 
     #[test]
-    fn trilinear_returns_corner_values_at_lattice_points() {
+    fn interpolate_corners_returns_corner_values_at_lattice_points() {
         let corners = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0];
 
-        assert_eq!(PerlinNoiseTexture::trilinear(corners, 0.0, 0.0, 0.0), 10.0);
-        assert_eq!(PerlinNoiseTexture::trilinear(corners, 1.0, 0.0, 0.0), 20.0);
-        assert_eq!(PerlinNoiseTexture::trilinear(corners, 0.0, 1.0, 0.0), 30.0);
-        assert_eq!(PerlinNoiseTexture::trilinear(corners, 1.0, 1.0, 0.0), 40.0);
-        assert_eq!(PerlinNoiseTexture::trilinear(corners, 0.0, 0.0, 1.0), 50.0);
-        assert_eq!(PerlinNoiseTexture::trilinear(corners, 1.0, 0.0, 1.0), 60.0);
-        assert_eq!(PerlinNoiseTexture::trilinear(corners, 0.0, 1.0, 1.0), 70.0);
-        assert_eq!(PerlinNoiseTexture::trilinear(corners, 1.0, 1.0, 1.0), 80.0);
+        assert_eq!(
+            PerlinNoiseTexture::interpolate_corners(corners, 0.0, 0.0, 0.0),
+            10.0
+        );
+        assert_eq!(
+            PerlinNoiseTexture::interpolate_corners(corners, 1.0, 0.0, 0.0),
+            20.0
+        );
+        assert_eq!(
+            PerlinNoiseTexture::interpolate_corners(corners, 0.0, 1.0, 0.0),
+            30.0
+        );
+        assert_eq!(
+            PerlinNoiseTexture::interpolate_corners(corners, 1.0, 1.0, 0.0),
+            40.0
+        );
+        assert_eq!(
+            PerlinNoiseTexture::interpolate_corners(corners, 0.0, 0.0, 1.0),
+            50.0
+        );
+        assert_eq!(
+            PerlinNoiseTexture::interpolate_corners(corners, 1.0, 0.0, 1.0),
+            60.0
+        );
+        assert_eq!(
+            PerlinNoiseTexture::interpolate_corners(corners, 0.0, 1.0, 1.0),
+            70.0
+        );
+        assert_eq!(
+            PerlinNoiseTexture::interpolate_corners(corners, 1.0, 1.0, 1.0),
+            80.0
+        );
     }
 
     #[test]
-    fn trilinear_at_cell_center_averages_corners() {
+    fn interpolate_corners_at_cell_center_averages_corners() {
         let corners = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
 
-        assert_eq!(PerlinNoiseTexture::trilinear(corners, 0.5, 0.5, 0.5), 3.5);
+        assert_eq!(
+            PerlinNoiseTexture::interpolate_corners(corners, 0.5, 0.5, 0.5),
+            3.5
+        );
     }
 
     #[test]
     fn hash_wraps_negative_coordinates() {
         let texture = identity_texture();
 
-        assert_eq!(texture.hash(-1, 0, 0), texture.hash(255, 0, 0));
-        assert_eq!(texture.hash(0, -1, 0), texture.hash(0, 255, 0));
-        assert_eq!(texture.hash(0, 0, -1), texture.hash(0, 0, 255));
+        assert_eq!(texture.hash_index(-1, 0, 0), texture.hash_index(255, 0, 0));
+        assert_eq!(texture.hash_index(0, -1, 0), texture.hash_index(0, 255, 0));
+        assert_eq!(texture.hash_index(0, 0, -1), texture.hash_index(0, 0, 255));
     }
 
     #[test]
-    fn hash_uses_xor_of_wrapped_permutations() {
+    fn hash_index_uses_xor_of_wrapped_permutations() {
         let texture = identity_texture();
 
-        assert_eq!(texture.hash(3, 5, 7), 1.0);
-        assert_eq!(texture.hash(-1, 0, 0), 255.0);
+        assert_eq!(texture.hash_index(3, 5, 7), 1);
+        assert_eq!(texture.hash_index(-1, 0, 0), 255);
     }
 
     #[test]
-    fn perlin_noise_at_integer_point_matches_first_corner_hash() {
+    fn perlin_noise_at_integer_point_is_zero() {
         let texture = identity_texture();
-
-        assert_eq!(
-            texture.perlin_noise(Point::new(3.0, 0.0, 0.0)),
-            texture.hash(3, 0, 0)
-        );
-        assert_eq!(
-            texture.perlin_noise(Point::new(-1.0, 0.0, 0.0)),
-            texture.hash(-1, 0, 0)
-        );
+        assert_eq!(texture.perlin_noise(Point::new(3.0, 0.0, 0.0)), 0.0);
+        assert_eq!(texture.perlin_noise(Point::new(-1.0, 0.0, 0.0)), 0.0);
     }
 }
