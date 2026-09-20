@@ -8,6 +8,8 @@ pub struct BoundingBox {
 }
 
 impl BoundingBox {
+    const MIN_BOUNDING_BOX_DIMENSION_SIZE: f32 = 0.0001;
+
     pub fn new(a: Point, b: Point) -> Self {
         let x = if a.x <= b.x {
             Interval::new(a.x, b.x)
@@ -25,7 +27,7 @@ impl BoundingBox {
             Interval::new(b.z, a.z)
         };
 
-        Self { x, y, z }
+        Self::pad_to_minimum(&Self { x, y, z }, Self::MIN_BOUNDING_BOX_DIMENSION_SIZE)
     }
 
     pub fn empty() -> Self {
@@ -40,7 +42,7 @@ impl BoundingBox {
         let x = Interval::new_from_intervals(&a.x, &b.x);
         let y = Interval::new_from_intervals(&a.y, &b.y);
         let z = Interval::new_from_intervals(&a.z, &b.z);
-        Self { x, y, z }
+        Self::pad_to_minimum(&Self { x, y, z }, Self::MIN_BOUNDING_BOX_DIMENSION_SIZE)
     }
 
     pub fn intersects(&self, ray: &Ray, interval: &Interval) -> bool {
@@ -75,6 +77,22 @@ impl BoundingBox {
         }
 
         ray_interval.max > ray_interval.min
+    }
+
+    fn pad_to_minimum(bbox: &Self, min: f32) -> Self {
+        let x = Self::pad_interval(bbox.x, min);
+        let y = Self::pad_interval(bbox.y, min);
+        let z = Self::pad_interval(bbox.z, min);
+
+        Self { x, y, z }
+    }
+
+    fn pad_interval(interval: Interval, min: f32) -> Interval {
+        if interval.size() < min {
+            interval.expand(min)
+        } else {
+            interval
+        }
     }
 }
 
@@ -196,4 +214,13 @@ mod tests {
 
         assert!(!bbox.intersects(&ray, &open_interval()));
     }
+
+  #[test]
+  fn flat_box_is_padded_for_bvh_intersection() {
+      let flat = BoundingBox::new(Point::new(0.0, 0.0, 0.0), Point::new(1.0, 1.0, 0.0));
+      assert!(flat.z.size() >= 0.0001);
+
+      let ray = ray_from(Point::new(0.5, 0.5, -1.0), Direction::new(0.0, 0.0, 1.0));
+      assert!(flat.intersects(&ray, &open_interval()));
+  }
 }
