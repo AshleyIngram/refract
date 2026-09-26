@@ -2,6 +2,7 @@ pub mod bounding_box;
 pub mod bvh_node;
 pub mod core;
 pub mod hittable;
+pub mod quad;
 pub mod ray;
 pub mod render;
 pub mod scene;

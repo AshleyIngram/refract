@@ -4,7 +4,7 @@ use refract::camera::RenderSettings;
 use refract::{material::ReflectionType, scene::Scene};
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
 
-use crate::{Book1Scene, DemoScene, EarthScene, PerlinNoiseScene, ScenePreset};
+use crate::{Book1Scene, DemoScene, EarthScene, PerlinNoiseScene, QuadsScene, ScenePreset};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, EnumIter, Display, EnumString)]
 #[strum(serialize_all = "lowercase", ascii_case_insensitive)]
@@ -22,6 +22,8 @@ pub enum SceneKind {
         to_string = "Perlin Noise"
     )]
     PerlinNoise,
+    #[strum(to_string = "Quads")]
+    Quads,
 }
 
 impl SceneKind {
@@ -39,6 +41,7 @@ impl SceneKind {
             Self::Book1 => Book1Scene.build(reflection_type),
             Self::Earth => EarthScene.build(reflection_type),
             Self::PerlinNoise => PerlinNoiseScene.build(reflection_type),
+            Self::Quads => QuadsScene.build(reflection_type),
         }
     }
 
@@ -48,6 +51,7 @@ impl SceneKind {
             Self::Book1 => Book1Scene.default_render_settings(),
             Self::Earth => EarthScene.default_render_settings(),
             Self::PerlinNoise => PerlinNoiseScene.default_render_settings(),
+            Self::Quads => QuadsScene.default_render_settings(),
         }
     }
 }
@@ -60,7 +64,7 @@ mod tests {
 
     #[test]
     fn iter_includes_every_variant() {
-        assert_eq!(SceneKind::iter().count(), 4);
+        assert_eq!(SceneKind::iter().count(), 5);
     }
 
     #[test]
@@ -94,6 +98,12 @@ mod tests {
     }
 
     #[test]
+    fn parse_quads() {
+        assert_eq!(SceneKind::parse("quads"), Some(SceneKind::Quads));
+        assert_eq!(SceneKind::parse("Quads"), Some(SceneKind::Quads));
+    }
+
+    #[test]
     fn parse_unknown_none() {
         assert_eq!(SceneKind::parse("book3"), None);
         assert_eq!(SceneKind::parse("unknown"), None);
@@ -109,6 +119,8 @@ mod tests {
         assert_eq!(SceneKind::Demo.to_string(), "Demo");
         assert_eq!(SceneKind::Book1.to_string(), "Book 1");
         assert_eq!(SceneKind::Earth.to_string(), "Earth");
+        assert_eq!(SceneKind::PerlinNoise.to_string(), "Perlin Noise");
+        assert_eq!(SceneKind::Quads.to_string(), "Quads");
     }
 
     #[test]

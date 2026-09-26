@@ -215,12 +215,12 @@ mod tests {
         assert!(!bbox.intersects(&ray, &open_interval()));
     }
 
-  #[test]
-  fn flat_box_is_padded_for_bvh_intersection() {
-      let flat = BoundingBox::new(Point::new(0.0, 0.0, 0.0), Point::new(1.0, 1.0, 0.0));
-      assert!(flat.z.size() >= 0.0001);
+    #[test]
+    fn flat_box_is_padded_for_bvh_intersection() {
+        let flat = BoundingBox::new(Point::new(0.0, 0.0, 0.0), Point::new(1.0, 1.0, 0.0));
+        assert!(flat.z.size() >= 0.0001);
 
-      let ray = ray_from(Point::new(0.5, 0.5, -1.0), Direction::new(0.0, 0.0, 1.0));
-      assert!(flat.intersects(&ray, &open_interval()));
-  }
+        let ray = ray_from(Point::new(0.5, 0.5, -1.0), Direction::new(0.0, 0.0, 1.0));
+        assert!(flat.intersects(&ray, &open_interval()));
+    }
 }
