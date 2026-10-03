@@ -1,4 +1,4 @@
-use crate::{color::Color, point::Point, surfaces::texture::texture::Texture};
+use crate::{color::Color, point::Point, surfaces::texture::Texture};
 
 pub struct SolidColorTexture {
     color: Color,

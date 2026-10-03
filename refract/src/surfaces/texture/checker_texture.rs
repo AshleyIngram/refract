@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::{
     color::Color,
     point::Point,
-    surfaces::texture::{solid_color_texture::SolidColorTexture, texture::Texture},
+    surfaces::texture::{solid_color_texture::SolidColorTexture, Texture},
 };
 
 pub struct CheckerTexture {

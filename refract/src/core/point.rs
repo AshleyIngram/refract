@@ -22,7 +22,7 @@ impl Add<Direction> for Point {
     }
 }
 
-impl<'a, 'b> Add<&'b Direction> for &'a Point {
+impl<'b> Add<&'b Direction> for &Point {
     type Output = Point;
 
     fn add(self, other: &'b Direction) -> Point {
@@ -30,7 +30,7 @@ impl<'a, 'b> Add<&'b Direction> for &'a Point {
     }
 }
 
-impl<'a> Add<Direction> for &'a Point {
+impl Add<Direction> for &Point {
     type Output = Point;
 
     fn add(self, other: Direction) -> Point {
@@ -78,7 +78,7 @@ impl Sub<Point> for Point {
     }
 }
 
-impl<'a, 'b> Sub<&'b Direction> for &'a Point {
+impl<'b> Sub<&'b Direction> for &Point {
     type Output = Point;
 
     fn sub(self, other: &'b Direction) -> Point {
@@ -86,7 +86,7 @@ impl<'a, 'b> Sub<&'b Direction> for &'a Point {
     }
 }
 
-impl<'a> Sub<Direction> for &'a Point {
+impl Sub<Direction> for &Point {
     type Output = Point;
 
     fn sub(self, other: Direction) -> Point {
@@ -102,7 +102,7 @@ impl<'a> Sub<&'a Direction> for Point {
     }
 }
 
-impl<'a, 'b> Sub<&'b Point> for &'a Point {
+impl<'b> Sub<&'b Point> for &Point {
     type Output = Direction;
 
     fn sub(self, other: &'b Point) -> Direction {
@@ -110,7 +110,7 @@ impl<'a, 'b> Sub<&'b Point> for &'a Point {
     }
 }
 
-impl<'a> Sub<Point> for &'a Point {
+impl Sub<Point> for &Point {
     type Output = Direction;
 
     fn sub(self, other: Point) -> Direction {

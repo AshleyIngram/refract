@@ -55,8 +55,8 @@ impl BvhNode {
                 );
 
                 Arc::new(Self {
-                    left: left,
-                    right: right,
+                    left,
+                    right,
                     bounding_box,
                 })
             }

@@ -4,7 +4,7 @@ use crate::{
     color::Color,
     direction::{Direction, UnitDirection},
     point::Point,
-    surfaces::texture::texture::Texture,
+    surfaces::texture::Texture,
 };
 use rand::seq::SliceRandom;
 
@@ -103,10 +103,9 @@ impl PerlinNoiseTexture {
     }
 
     fn hash_index(&self, x: i32, y: i32, z: i32) -> usize {
-        let idx = self.shuffled_x[(x & 255) as usize]
+        self.shuffled_x[(x & 255) as usize]
             ^ self.shuffled_y[(y & 255) as usize]
-            ^ self.shuffled_z[(z & 255) as usize];
-        idx
+            ^ self.shuffled_z[(z & 255) as usize]
     }
 
     fn lerp(a: f32, b: f32, t: f32) -> f32 {

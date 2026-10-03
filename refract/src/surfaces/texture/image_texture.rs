@@ -3,7 +3,7 @@ use std::path::Path;
 use load_image::export::imgref::ImgVec;
 use load_image::export::rgb::RGBA8;
 
-use crate::{color::Color, point::Point, surfaces::texture::texture::Texture};
+use crate::{color::Color, point::Point, surfaces::texture::Texture};
 
 pub struct ImageTexture {
     bitmap: Option<ImgVec<RGBA8>>,

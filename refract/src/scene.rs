@@ -18,6 +18,12 @@ pub struct SceneBuilder {
     bounding_box: BoundingBox,
 }
 
+impl Default for SceneBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SceneBuilder {
     pub fn new() -> Self {
         Self {

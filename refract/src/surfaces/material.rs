@@ -6,7 +6,7 @@ use crate::{
     hittable::HitResult,
     ray::Ray,
     rng::random_range,
-    surfaces::texture::{solid_color_texture::SolidColorTexture, texture::Texture},
+    surfaces::texture::{solid_color_texture::SolidColorTexture, Texture},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]

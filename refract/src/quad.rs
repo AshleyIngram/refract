@@ -72,7 +72,7 @@ impl Hittable for Quad {
         let alpha = self.scale_vector.dot(hit_offset.cross(self.edge_b));
         let beta = self.scale_vector.dot(self.edge_a.cross(hit_offset));
 
-        if alpha < 0.0 || alpha > 1.0 || beta < 0.0 || beta > 1.0 {
+        if !(0.0..=1.0).contains(&alpha) || !(0.0..=1.0).contains(&beta) {
             return None;
         }
 

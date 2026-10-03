@@ -89,7 +89,7 @@ impl UnitDirection {
         loop {
             let direction = Direction::random_within_range(-1.0, 1.0);
             let len_squared = direction.len_squared();
-            if len_squared < f32::EPSILON || len_squared > 1.0 {
+            if !(f32::EPSILON..=1.0).contains(&len_squared) {
                 continue;
             }
 
@@ -126,15 +126,15 @@ impl Add<Direction> for Direction {
     }
 }
 
-impl<'a, 'b> Add<&'b Direction> for &'a Direction {
+impl Add<&Direction> for &Direction {
     type Output = Direction;
 
-    fn add(self, other: &'b Direction) -> Direction {
+    fn add(self, other: &Direction) -> Direction {
         *self + *other
     }
 }
 
-impl<'a> Add<Direction> for &'a Direction {
+impl Add<Direction> for &Direction {
     type Output = Direction;
 
     fn add(self, other: Direction) -> Direction {
@@ -177,7 +177,7 @@ impl Div<f32> for Direction {
     }
 }
 
-impl<'a> Div<f32> for &'a Direction {
+impl Div<f32> for &Direction {
     type Output = Direction;
 
     fn div(self, other: f32) -> Direction {
@@ -220,7 +220,7 @@ impl Mul<f32> for Direction {
     }
 }
 
-impl<'a> Mul<f32> for &'a Direction {
+impl Mul<f32> for &Direction {
     type Output = Direction;
 
     fn mul(self, other: f32) -> Direction {
@@ -244,7 +244,7 @@ impl Neg for Direction {
     }
 }
 
-impl<'a> Neg for &'a Direction {
+impl Neg for &Direction {
     type Output = Direction;
 
     fn neg(self) -> Direction {
@@ -260,7 +260,7 @@ impl Neg for UnitDirection {
     }
 }
 
-impl<'a> Neg for &'a UnitDirection {
+impl Neg for &UnitDirection {
     type Output = UnitDirection;
 
     fn neg(self) -> UnitDirection {
