@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use refract::camera::RenderSettings;
+use refract::color::Color;
 use refract::surfaces::texture::perlin_noise_texture::PerlinNoiseTexture;
 use refract::{
     material::{Matte, ReflectionType},
@@ -44,6 +45,7 @@ impl ScenePreset for PerlinNoiseScene {
             camera_center: Point::new(13.0, 2.0, 3.0),
             look_at: Point::new(0.0, 0.0, 0.0),
             defocus_angle: 0.0,
+            background_color: Color::new(0.7, 0.8, 1.0),
             ..RenderSettings::default()
         }
     }

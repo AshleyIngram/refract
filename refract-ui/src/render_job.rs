@@ -79,6 +79,7 @@ impl RenderConfig {
             focus_distance: self.focus_distance,
             samples_per_pixel: self.samples_per_pixel,
             max_depth: self.max_depth,
+            background_color: self.scene.default_render_settings().background_color,
         })
     }
 }

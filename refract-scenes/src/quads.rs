@@ -69,6 +69,7 @@ impl ScenePreset for QuadsScene {
             look_at: Point::new(0.0, 0.0, 0.0),
             defocus_angle: 0.0,
             aspect_ratio: 1.0,
+            background_color: Color::new(0.7, 0.8, 1.0),
             ..RenderSettings::default()
         }
     }

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use refract::{
+    camera::RenderSettings,
     checker_texture::CheckerTexture,
     color::Color,
     direction::Direction,
@@ -57,6 +58,13 @@ impl ScenePreset for DemoScene {
         ));
 
         scene_builder.build()
+    }
+
+    fn default_render_settings(&self) -> refract::camera::RenderSettings {
+        RenderSettings {
+            background_color: Color::new(0.7, 0.8, 1.0),
+            ..RenderSettings::default()
+        }
     }
 }
 

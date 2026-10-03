@@ -24,6 +24,7 @@ pub struct RenderSettings {
     pub focus_distance: f32,
     pub samples_per_pixel: i32,
     pub max_depth: i32,
+    pub background_color: Color,
 }
 
 impl Default for RenderSettings {
@@ -39,6 +40,7 @@ impl Default for RenderSettings {
             focus_distance: 10.0,
             samples_per_pixel: 500,
             max_depth: 50,
+            background_color: Color::new(0.0, 0.0, 0.0),
         }
     }
 }
@@ -55,6 +57,7 @@ pub struct Camera {
     defocus_angle: f32,
     defocus_disk_u: Direction,
     defocus_disk_v: Direction,
+    background_color: Color,
 }
 
 impl Camera {
@@ -99,6 +102,7 @@ impl Camera {
             defocus_angle: settings.defocus_angle,
             defocus_disk_u,
             defocus_disk_v,
+            background_color: settings.background_color,
         }
     }
 
@@ -111,19 +115,17 @@ impl Camera {
         let hit_result = scene.hit(ray, &interval);
 
         match hit_result {
-            None => {
-                let unit_direction = ray.direction().normalize();
-                let a = 0.5 * (unit_direction.y + 1.0);
-                (1.0 - a) * Color::new(1.0, 1.0, 1.0) + (a * Color::new(0.5, 0.7, 1.0))
-            }
+            None => self.background_color,
             Some(h) => {
+                let emitted_color = h.material.emitted(&h);
                 let scatter_result = h.material.scatter(ray, &h);
                 match scatter_result {
                     Some(scatter_result) => {
                         scatter_result.attenuation
                             * self.ray_color(&scatter_result.scattered, depth - 1, scene)
+                            + emitted_color
                     }
-                    None => Color::new(0.0, 0.0, 0.0),
+                    None => emitted_color,
                 }
             }
         }
@@ -219,6 +221,7 @@ mod tests {
             focus_distance: 10.0,
             samples_per_pixel: 500,
             max_depth: 50,
+            background_color: Color::new(0.0, 0.0, 0.0),
         })
     }
 

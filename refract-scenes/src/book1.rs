@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use refract::{
+    camera::RenderSettings,
     color::Color,
     material::{Dielectric, Material, Matte, Metal, ReflectionType},
     point::Point,
@@ -50,6 +51,13 @@ impl ScenePreset for Book1Scene {
         ));
 
         scene_builder.build()
+    }
+
+    fn default_render_settings(&self) -> refract::camera::RenderSettings {
+        RenderSettings {
+            background_color: Color::new(0.7, 0.8, 1.0),
+            ..RenderSettings::default()
+        }
     }
 }
 
