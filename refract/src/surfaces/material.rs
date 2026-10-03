@@ -26,6 +26,10 @@ pub struct ScatterResult {
 
 pub trait Material: Send + Sync {
     fn scatter(&self, ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult>;
+
+    fn emitted(&self, _hit_result: &HitResult) -> Color {
+        Color::new(0.0, 0.0, 0.0)
+    }
 }
 
 pub struct Matte {
@@ -152,6 +156,27 @@ impl Material for Dielectric {
     }
 }
 
+pub struct DiffuseLight {
+    texture: Arc<dyn Texture>,
+}
+
+impl DiffuseLight {
+    fn new(texture: Arc<dyn Texture>) -> DiffuseLight {
+        Self { texture }
+    }
+}
+
+impl Material for DiffuseLight {
+    fn scatter(&self, _ray: &Ray, _hit_result: &HitResult) -> Option<ScatterResult> {
+        None
+    }
+
+    fn emitted(&self, hit_result: &HitResult) -> Color {
+        self.texture
+            .value(hit_result.u, hit_result.v, hit_result.point)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -258,7 +283,7 @@ mod tests {
     #[test]
     fn metal_scatter_reflects_at_45_degrees() {
         let metal: Arc<dyn Material> = Arc::new(Metal::new(Color::new(1.0, 1.0, 1.0), 0.0));
-        let point = Point::new(0.0, 0.0, 0.0);
+        let point: Point = Point::new(0.0, 0.0, 0.0);
         let normal = Direction::new(0.0, 1.0, 0.0).normalize();
         let incident = Ray::new(Point::new(-1.0, 1.0, 0.0), Direction::new(1.0, -1.0, 0.0));
         let hit = hit_result_at(&incident, point, normal, Arc::clone(&metal));
@@ -269,5 +294,33 @@ mod tests {
             scatter.scattered.direction(),
             *Direction::new(1.0, 1.0, 0.0).normalize()
         );
+    }
+
+    #[test]
+    fn diffuse_light_scatter_none() {
+        let texture = Arc::new(SolidColorTexture::new(Color::new(1.0, 0.0, 0.0)));
+        let material = Arc::new(DiffuseLight::new(texture));
+        let point: Point = Point::new(0.0, 0.0, 0.0);
+        let normal = Direction::new(0.0, 1.0, 0.0).normalize();
+        let incident = Ray::new(Point::new(-1.0, 1.0, 0.0), Direction::new(1.0, -1.0, 0.0));
+        let hit = hit_result_at(&incident, point, normal, material.clone());
+
+        let scatter = material.scatter(&incident, &hit);
+
+        assert!(scatter.is_none());
+    }
+
+    #[test]
+    fn diffuse_light_emits_texture_color() {
+        let texture = Arc::new(SolidColorTexture::new(Color::new(1.0, 0.0, 0.0)));
+        let material = Arc::new(DiffuseLight::new(texture));
+        let point: Point = Point::new(0.0, 0.0, 0.0);
+        let normal = Direction::new(0.0, 1.0, 0.0).normalize();
+        let incident = Ray::new(Point::new(-1.0, 1.0, 0.0), Direction::new(1.0, -1.0, 0.0));
+        let hit = hit_result_at(&incident, point, normal, material.clone());
+
+        let emitted = material.emitted(&hit);
+
+        assert_eq!(emitted, Color::new(1.0, 0.0, 0.0));
     }
 }
