@@ -4,7 +4,9 @@ use refract::camera::RenderSettings;
 use refract::{material::ReflectionType, scene::Scene};
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
 
-use crate::{Book1Scene, DemoScene, EarthScene, PerlinNoiseScene, QuadsScene, ScenePreset};
+use crate::{
+    Book1Scene, DemoScene, EarthScene, LightingScene, PerlinNoiseScene, QuadsScene, ScenePreset,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, EnumIter, Display, EnumString)]
 #[strum(serialize_all = "lowercase", ascii_case_insensitive)]
@@ -24,6 +26,8 @@ pub enum SceneKind {
     PerlinNoise,
     #[strum(to_string = "Quads")]
     Quads,
+    #[strum(to_string = "Lighting")]
+    Lighting,
 }
 
 impl SceneKind {
@@ -42,6 +46,7 @@ impl SceneKind {
             Self::Earth => EarthScene.build(reflection_type),
             Self::PerlinNoise => PerlinNoiseScene.build(reflection_type),
             Self::Quads => QuadsScene.build(reflection_type),
+            Self::Lighting => LightingScene.build(reflection_type),
         }
     }
 
@@ -52,6 +57,7 @@ impl SceneKind {
             Self::Earth => EarthScene.default_render_settings(),
             Self::PerlinNoise => PerlinNoiseScene.default_render_settings(),
             Self::Quads => QuadsScene.default_render_settings(),
+            Self::Lighting => LightingScene.default_render_settings(),
         }
     }
 }
@@ -64,7 +70,7 @@ mod tests {
 
     #[test]
     fn iter_includes_every_variant() {
-        assert_eq!(SceneKind::iter().count(), 5);
+        assert_eq!(SceneKind::iter().count(), 6);
     }
 
     #[test]
@@ -101,6 +107,12 @@ mod tests {
     fn parse_quads() {
         assert_eq!(SceneKind::parse("quads"), Some(SceneKind::Quads));
         assert_eq!(SceneKind::parse("Quads"), Some(SceneKind::Quads));
+    }
+
+    #[test]
+    fn parse_lighting() {
+        assert_eq!(SceneKind::parse("lighting"), Some(SceneKind::Lighting));
+        assert_eq!(SceneKind::parse("Lighting"), Some(SceneKind::Lighting));
     }
 
     #[test]
