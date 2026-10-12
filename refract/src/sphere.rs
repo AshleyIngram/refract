@@ -150,8 +150,8 @@ mod tests {
         let result = hit_result.unwrap();
         assert_eq!(result.t, 0.5);
         assert_eq!(result.point.z, -0.5);
-        assert_eq!(result.front_face, true);
-        assert_eq!(result.normal.z > 0.0, true);
+        assert!(result.front_face);
+        assert!(result.normal.z > 0.0);
     }
 
     #[test]
@@ -173,8 +173,8 @@ mod tests {
         let result = hit_result.unwrap();
         assert_eq!(result.t, 0.6);
         assert_eq!(result.point.z, -1.5);
-        assert_eq!(result.front_face, false);
-        assert_eq!(result.normal.z > 0.0, true);
+        assert!(!result.front_face);
+        assert!(result.normal.z > 0.0);
     }
 
     #[test]
@@ -297,21 +297,26 @@ mod tests {
 
     #[test]
     fn get_sphere_uv_cardinal_directions_correct() {
-        const CASES: [((f32, f32, f32), (f32, f32)); 6] = [
-            ((1.0, 0.0, 0.0), (0.5, 0.5)),
-            ((-1.0, 0.0, 0.0), (0.0, 0.5)),
-            ((0.0, 1.0, 0.0), (0.5, 1.0)),
-            ((0.0, -1.0, 0.0), (0.5, 0.0)),
-            ((0.0, 0.0, 1.0), (0.25, 0.5)),
-            ((0.0, 0.0, -1.0), (0.75, 0.5)),
+        struct UvCase {
+            point: Point,
+            expected_x: f32,
+            expected_y: f32,
+        }
+
+        let cases: [UvCase; 6] = [
+            UvCase { point: Point::new(1.0, 0.0, 0.0), expected_x: 0.5, expected_y: 0.5 },
+            UvCase { point: Point::new(-1.0, 0.0, 0.0), expected_x: 0.0, expected_y: 0.5 },
+            UvCase { point: Point::new(0.0, 1.0, 0.0), expected_x: 0.5, expected_y: 1.0 },
+            UvCase { point: Point::new(0.0, -1.0, 0.0), expected_x: 0.5, expected_y: 0.0 },
+            UvCase { point: Point::new(0.0, 0.0, 1.0), expected_x: 0.25, expected_y: 0.5 },
+            UvCase { point: Point::new(0.0, 0.0, -1.0), expected_x: 0.75, expected_y: 0.5 },
         ];
 
-        for ((x, y, z), expected) in CASES {
-            let direction = Point::new(x, y, z);
-            let actual = Sphere::get_sphere_uv(direction);
+        for test_case in cases {
+            let actual = Sphere::get_sphere_uv(test_case.point);
 
-            assert!(actual.0 - expected.0 < f32::EPSILON);
-            assert!(actual.1 - expected.1 < f32::EPSILON);
+            assert!((actual.0 - test_case.expected_x).abs() < f32::EPSILON);
+            assert!((actual.1 - test_case.expected_y).abs() < f32::EPSILON);
         }
     }
 }

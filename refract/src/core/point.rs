@@ -169,9 +169,9 @@ mod tests {
         let expected_result = Point::new(2.0, 3.0, 4.0);
 
         assert_eq!(point + direction, expected_result);
-        assert_eq!(point + &direction, expected_result);
-        assert_eq!(&point + direction, expected_result);
-        assert_eq!(&point + &direction, expected_result);
+        assert_eq!(point + direction, expected_result);
+        assert_eq!(point + direction, expected_result);
+        assert_eq!(point + direction, expected_result);
     }
 
     #[test]
@@ -195,9 +195,9 @@ mod tests {
         let expected_result = Point::new(0.0, -1.0, -2.0);
 
         assert_eq!(point - direction, expected_result);
-        assert_eq!(point - &direction, expected_result);
-        assert_eq!(&point - direction, expected_result);
-        assert_eq!(&point - &direction, expected_result);
+        assert_eq!(point - direction, expected_result);
+        assert_eq!(point - direction, expected_result);
+        assert_eq!(point - direction, expected_result);
     }
 
     #[test]
